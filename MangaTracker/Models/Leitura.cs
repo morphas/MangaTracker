@@ -4,6 +4,8 @@ namespace MangaTracker.Models
 {
     public class Leitura
     {
+        public Guid UsuarioId { get; set; }
+
         public Guid MangaId { get; set; }
         public StatusLeitura Status { get; set; } = StatusLeitura.PretendoLer;
 
