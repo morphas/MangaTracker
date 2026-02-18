@@ -3,6 +3,9 @@ using System.Linq;
 using MangaTracker.Models;
 using MangaTracker.Services;
 using System.Collections.Generic;
+using static MangaTracker.ConsoleHelpers;
+using static MangaTracker.ConsoleUI;
+
 
 
 namespace MangaTracker
@@ -11,7 +14,7 @@ namespace MangaTracker
     {
         static void Main()
         {
-            var service = new BibliotecaService();
+            IBibliotecaService service = new BibliotecaService();
 
             try
             {
@@ -59,7 +62,7 @@ namespace MangaTracker
 
         }
 
-        static void TelaMeuPerfil(BibliotecaService service)
+        static void TelaMeuPerfil(IBibliotecaService service)
         {
             while (true)
             {
@@ -84,7 +87,7 @@ namespace MangaTracker
             }
         }
 
-        static void TelaUsuarios(BibliotecaService service)
+        static void TelaUsuarios(IBibliotecaService service)
         {
             while (true)
             {
@@ -127,7 +130,7 @@ namespace MangaTracker
             }
         }
 
-        static void TelaListarUsuarios(BibliotecaService service)
+        static void TelaListarUsuarios(IBibliotecaService service)
         {
             Console.Clear();
             Console.WriteLine("=== Lista de usuários ===");
@@ -148,7 +151,7 @@ namespace MangaTracker
             Pausa("Voltar");
         }
 
-        static void TelaCriarUsuario(BibliotecaService service)
+        static void TelaCriarUsuario(IBibliotecaService service)
         {
             while (true)
             {
@@ -180,7 +183,7 @@ namespace MangaTracker
             }
         }
 
-        static void TelaTrocarUsuario(BibliotecaService service)
+        static void TelaTrocarUsuario(IBibliotecaService service)
         {
             while (true)
             {
@@ -221,7 +224,7 @@ namespace MangaTracker
             }
         }
 
-        static void TelaMinhaLeitura(BibliotecaService service)
+        static void TelaMinhaLeitura(IBibliotecaService service)
         {
             while (true)
             {
@@ -249,7 +252,7 @@ namespace MangaTracker
         // =========================
         // CATÁLOGO (MENU)
         // =========================
-        static void TelaCatalogo(BibliotecaService service)
+        static void TelaCatalogo(IBibliotecaService service)
         {
             while (true)
             {
@@ -290,7 +293,7 @@ namespace MangaTracker
             }
         }
 
-        static void TelaCadastrarNoCatalogo(BibliotecaService service)
+        static void TelaCadastrarNoCatalogo(IBibliotecaService service)
         {
             string? tituloDigitado = null;
             bool? finalizado = null;
@@ -376,7 +379,7 @@ namespace MangaTracker
             }
         }
 
-        static void TelaListarCatalogo(BibliotecaService service)
+        static void TelaListarCatalogo(IBibliotecaService service)
         {
             Console.Clear();
             Console.WriteLine("=== Catálogo ===");
@@ -399,7 +402,7 @@ namespace MangaTracker
             Pausa("Voltar");
         }
 
-        static void TelaEditarMangaDoCatalogo(BibliotecaService service)
+        static void TelaEditarMangaDoCatalogo(IBibliotecaService service)
         {
             while (true)
             {
@@ -434,13 +437,13 @@ namespace MangaTracker
 
                         for (int i = 0; i < catalogo.Count; i++)
                         {
-                            string total = catalogo[i].TotalCapitulos.HasValue ? catalogo[i].TotalCapitulos.Value.ToString() : "?";
+                            string total = catalogo[i].TotalCapitulos?.ToString() ?? "?";
                             Console.WriteLine($"{i + 1}. {catalogo[i].Titulo} (Capítulos Totais: {total})");
                         }
 
                         Console.WriteLine();
                         Console.Write("Escolha o número do mangá (ou 0): ");
-                        string? entrada = Console.ReadLine();
+                        string entrada = Console.ReadLine() ?? "";
 
                         if (entrada == "0") break;
 
@@ -449,6 +452,7 @@ namespace MangaTracker
                             PausaErro("Opção inválida.");
                             continue;
                         }
+
 
                         var manga = catalogo[idx - 1];
                         TelaEditarMangaSelecionado(service, manga.Id);
@@ -492,7 +496,7 @@ namespace MangaTracker
             }
         }
 
-        static void TelaEditarMangaSelecionado(BibliotecaService service, Guid mangaId)
+        static void TelaEditarMangaSelecionado(IBibliotecaService service, Guid mangaId)
         {
             var manga = service.BuscarMangaPorId(mangaId);
             if (manga is null)
@@ -566,7 +570,7 @@ namespace MangaTracker
         // =========================
         // MINHA LEITURA
         // =========================
-        static void TelaAdicionarNaMinhaLeitura(BibliotecaService service)
+        static void TelaAdicionarNaMinhaLeitura(IBibliotecaService service)
         {
             while (true)
             {
@@ -599,7 +603,7 @@ namespace MangaTracker
             }
         }
 
-        static void TelaVerCatalogoSomente(BibliotecaService service)
+        static void TelaVerCatalogoSomente(IBibliotecaService service)
         {
             while (true)
             {
@@ -618,9 +622,7 @@ namespace MangaTracker
 
                 for (int i = 0; i < catalogo.Count; i++)
                 {
-                    string total = catalogo[i].TotalCapitulos.HasValue
-                        ? catalogo[i].TotalCapitulos.Value.ToString()
-                        : "?";
+                    string total = catalogo[i].TotalCapitulos?.ToString() ?? "?";
 
                     bool jaAdicionado = service.EstaNaMinhaLista(catalogo[i].Id);
 
@@ -682,7 +684,7 @@ namespace MangaTracker
         }
 
 
-        static void TelaAdicionarPorTitulo(BibliotecaService service)
+        static void TelaAdicionarPorTitulo(IBibliotecaService service)
         {
             while (true)
             {
@@ -717,9 +719,7 @@ namespace MangaTracker
 
                 for (int i = 0; i < resultados.Count; i++)
                 {
-                    string total = resultados[i].TotalCapitulos.HasValue
-                        ? resultados[i].TotalCapitulos.Value.ToString()
-                        : "?";
+                    string total = resultados[i].TotalCapitulos?.ToString() ?? "?";                        
 
                     bool jaAdicionado = service.EstaNaMinhaLista(resultados[i].Id);
                     string tag = jaAdicionado ? "  [Já adicionado]" : "";
@@ -778,7 +778,7 @@ namespace MangaTracker
         }
 
 
-        static void TelaAtualizarProgresso(BibliotecaService service)
+        static void TelaAtualizarProgresso(IBibliotecaService service)
         {
             while (true)
             {
@@ -853,14 +853,31 @@ namespace MangaTracker
         }
 
 
-        static void TelaListarMinhasLeituras(BibliotecaService service)
+        static void TelaListarMinhasLeituras(IBibliotecaService service)
         {
-            Console.Clear();
-            Console.WriteLine("=== Minhas leituras ===");
-            Console.WriteLine("1 - Mostrar todas");
-            Console.WriteLine("2 - Filtrar por status");
-            Console.Write("Escolha: ");
-            string? op = Console.ReadLine();
+            string? op;
+
+            // Menu com validação (não sai da tela enquanto não escolher 1, 2 ou 0)
+            while (true)
+            {
+                Console.Clear();
+                Console.WriteLine("=== Minhas leituras ===");
+                Console.WriteLine("1 - Mostrar todas");
+                Console.WriteLine("2 - Filtrar por status");
+                Console.WriteLine("0 - Voltar");
+                Console.WriteLine();
+                Console.Write("Escolha: ");
+
+                op = Console.ReadLine();
+
+                if (op == "0")
+                    return;
+
+                if (op == "1" || op == "2")
+                    break;
+
+                PausaErro("Opção inválida. Escolha 1, 2 ou 0.");
+            }
 
             var lista = op == "2"
                 ? service.ListarMinhaListaPorStatus(LerStatus())
@@ -880,65 +897,59 @@ namespace MangaTracker
                 return;
             }
 
-            foreach (var linha in lista)
+            // Calcula larguras uma única vez
+            int colTitulo = Math.Min(35, Math.Max(15, lista.Max(x => x.Manga.Titulo.Length)));
+            int colStatus = 10;
+            int colCap = 12;
+            int colBarra = 27; // [████░░...] + " 100%"
+            int larguraTotal = colTitulo + colStatus + colCap + colBarra + 10;
+
+            // Cabeçalho
+            EscreverLinha('─', larguraTotal);
+            Console.Write(PadDir("Título", colTitulo));
+            Console.Write("  ");
+            Console.Write(PadDir("Status", colStatus));
+            Console.Write("  ");
+            Console.Write(PadDir("Capítulos", colCap));
+            Console.Write("  ");
+            Console.WriteLine("Progresso");
+            EscreverLinha('─', larguraTotal);
+
+            // Linhas
+            foreach (var item in lista)
             {
-                // Calcula larguras (limites para não estourar)
-                int colTitulo = Math.Min(35, Math.Max(15, lista.Max(x => x.Manga.Titulo.Length)));
-                int colStatus = 10;
-                int colCap = 12;
-                int colBarra = 27; // [████░░...] + " 100%"
+                string titulo = PadDir(Truncar(item.Manga.Titulo, colTitulo), colTitulo);
 
-                Console.Clear();
-                Console.WriteLine("=== Minhas leituras ===");
+                string totalTxt = item.Manga.TotalCapitulos.HasValue
+                    ? item.Manga.TotalCapitulos.Value.ToString()
+                    : "?";
+
+                string caps = PadDir($"{item.Leitura.CapituloAtual}/{totalTxt}", colCap);
+
+                Console.Write(titulo);
+                Console.Write("  ");
+
+                EscreverStatusColorido(item.Leitura.Status, colStatus);
+                Console.Write("  ");
+
+                Console.Write(caps);
+                Console.Write("  ");
+
+                if (item.Manga.TotalCapitulos.HasValue)
+                    EscreverBarraProgresso(item.Leitura.CapituloAtual, item.Manga.TotalCapitulos.Value, 20);
+                else
+                    Console.Write("[????????????????????]   ?%");
+
                 Console.WriteLine();
-
-                EscreverLinha('─', colTitulo + colStatus + colCap + colBarra + 10);
-                Console.Write(PadDir("Título", colTitulo));
-                Console.Write("  ");
-                Console.Write(PadDir("Status", colStatus));
-                Console.Write("  ");
-                Console.Write(PadDir("Capítulos", colCap));
-                Console.Write("  ");
-                Console.WriteLine("Progresso");
-                EscreverLinha('─', colTitulo + colStatus + colCap + colBarra + 10);
-
-                foreach (var item in lista)
-                {
-                    string titulo = PadDir(Truncar(item.Manga.Titulo, colTitulo), colTitulo);
-
-                    string totalTxt = item.Manga.TotalCapitulos.HasValue
-                        ? item.Manga.TotalCapitulos.Value.ToString()
-                        : "?";
-
-                    string caps = $"{item.Leitura.CapituloAtual}/{totalTxt}";
-                    caps = PadDir(caps, colCap);
-
-                    Console.Write(titulo);
-                    Console.Write("  ");
-
-                    EscreverStatusColorido(item.Leitura.Status, colStatus);
-                    Console.Write("  ");
-
-                    Console.Write(caps);
-                    Console.Write("  ");
-
-                    if (item.Manga.TotalCapitulos.HasValue)
-                        EscreverBarraProgresso(item.Leitura.CapituloAtual, item.Manga.TotalCapitulos.Value, 20);
-                    else
-                        Console.Write("[????????????????????]   ?%");
-
-                    Console.WriteLine();
-                }
-
-                EscreverLinha('─', colTitulo + colStatus + colCap + colBarra + 10);
-
             }
 
-
+            EscreverLinha('─', larguraTotal);
             Pausa("Voltar");
         }
 
-        static void TelaRelatorios(BibliotecaService service)
+
+
+        static void TelaRelatorios(IBibliotecaService service)
         {
             Console.Clear();
             Console.WriteLine("=== Relatórios ===");
@@ -1013,139 +1024,14 @@ namespace MangaTracker
             }
         }
 
-        static int LerInt(string msg, int min = int.MinValue, int max = int.MaxValue)
-        {
-            while (true)
-            {
-                Console.Write(msg);
-                string? entrada = Console.ReadLine();
-
-                if (int.TryParse(entrada, out int v) && v >= min && v <= max)
-                    return v;
-
-                PausaErro("Número inválido.");
-            }
-        }
-
-        static int? LerIntOpcional(string msg)
-        {
-            while (true)
-            {
-                Console.Write(msg);
-                string? entrada = Console.ReadLine();
-
-                if (string.IsNullOrWhiteSpace(entrada))
-                    return null;
-
-                if (int.TryParse(entrada, out int v) && v > 0)
-                    return v;
-
-                PausaErro("Número inválido (ou aperte Enter para pular).");
-            }
-        }
-
-        static string? LerTextoComCancelamento(string msg)
-        {
-            Console.Write(msg);
-            string? entrada = Console.ReadLine();
-
-            if (entrada is null) return null;
-
-            entrada = entrada.Trim();
-
-            if (entrada.Equals("/cancel", StringComparison.OrdinalIgnoreCase))
-                return null;
-
-            return entrada;
-        }
-
-        static void Pausa(string msg)
-        {
-            Console.WriteLine();
-            Console.WriteLine(msg);
-            Console.WriteLine("Pressione qualquer tecla...");
-            Console.ReadKey(true);
-        }
-
-        static void PausaErro(string msg)
-        {
-            Console.Clear();
-            Console.WriteLine("=== Erro ===");
-            Console.WriteLine();
-            Console.WriteLine(msg);
-            Console.WriteLine();
-            Console.WriteLine("Pressione qualquer tecla para voltar...");
-            Console.ReadKey(true);
-        }
-
-        static System.Collections.Generic.List<Manga> CatalogoOrdenado(BibliotecaService service)
+        static List<Manga> CatalogoOrdenado(IBibliotecaService service)
         {
             return service.ListarCatalogo()
                 .OrderBy(m => m.Titulo, StringComparer.CurrentCultureIgnoreCase)
                 .ToList();
         }
-        static string Truncar(string texto, int max)
-        {
-            if (string.IsNullOrEmpty(texto)) return "";
-            return texto.Length <= max ? texto : texto.Substring(0, Math.Max(0, max - 1)) + "…";
-        }
-
-        static string PadDir(string texto, int largura)
-        {
-            texto ??= "";
-            if (texto.Length >= largura) return texto;
-            return texto + new string(' ', largura - texto.Length);
-        }
-
-        static string PadEsq(string texto, int largura)
-        {
-            texto ??= "";
-            if (texto.Length >= largura) return texto;
-            return new string(' ', largura - texto.Length) + texto;
-        }
-
-        static void EscreverStatusColorido(StatusLeitura status, int largura)
-        {
-            var corAntiga = Console.ForegroundColor;
-
-            Console.ForegroundColor = status switch
-            {
-                StatusLeitura.PretendoLer => ConsoleColor.DarkYellow,
-                StatusLeitura.Lendo => ConsoleColor.Cyan,
-                StatusLeitura.Concluido => ConsoleColor.Green,
-                _ => ConsoleColor.Gray
-            };
-
-            Console.Write(PadDir(status.ToString(), largura));
-            Console.ForegroundColor = corAntiga;
-        }
-
-        static void EscreverBarraProgresso(int atual, int total, int larguraBarra = 20)
-        {
-            if (total <= 0)
-            {
-                Console.Write(PadDir("?", larguraBarra + 7));
-                return;
-            }
-
-            atual = Math.Clamp(atual, 0, total);
-            double pct = (atual * 1.0) / total;
-
-            int preenchido = (int)Math.Round(pct * larguraBarra);
-            preenchido = Math.Clamp(preenchido, 0, larguraBarra);
-
-            string barra = "[" + new string('█', preenchido) + new string('░', larguraBarra - preenchido) + "]";
-            string pctTxt = $"{pct * 100:0}%";
-
-            Console.Write($"{barra} {PadEsq(pctTxt, 4)}");
-        }
-
-        static void EscreverLinha(char ch = '─', int tamanho = 80)
-        {
-            Console.WriteLine(new string(ch, tamanho));
-        }
-
-        static System.Collections.Generic.List<Manga> BuscarCatalogoPorTrecho(BibliotecaService service, string trecho)
+        
+        static System.Collections.Generic.List<Manga> BuscarCatalogoPorTrecho(IBibliotecaService service, string trecho)
         {
             trecho = (trecho ?? "").Trim();
 
@@ -1155,27 +1041,6 @@ namespace MangaTracker
                 .ToList();
         }
 
-        static int? LerIntOpcionalComCancelamento(string msg, int min = int.MinValue, int max = int.MaxValue)
-        {
-            while (true)
-            {
-                Console.Write(msg);
-                string? entrada = Console.ReadLine();
-
-                if (entrada is null) return null;
-
-                entrada = entrada.Trim();
-
-                if (entrada.Equals("/cancel", StringComparison.OrdinalIgnoreCase))
-                    return null;
-
-                if (int.TryParse(entrada, out int v) && v >= min && v <= max)
-                    return v;
-
-                PausaErro("Número inválido (ou digite /cancel para voltar).");
-            }
-        }
-
-
+        
     }
 }

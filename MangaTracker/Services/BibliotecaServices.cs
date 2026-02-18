@@ -6,12 +6,13 @@ using MangaTracker.Models;
 
 namespace MangaTracker.Services
 {
-    public class BibliotecaService
+    public class BibliotecaService : IBibliotecaService
     {
         private readonly List<Manga> _catalogo = new();
         private readonly List<Leitura> _minhaLista = new();
         private readonly List<Usuario> _usuarios = new();
         private readonly JsonStorage _storage;
+        private readonly object _lock = new();
 
         private Guid _usuarioAtualId = Guid.Empty;
 
@@ -54,20 +55,27 @@ namespace MangaTracker.Services
 
         public Manga CadastrarNoCatalogo(string titulo, int? totalCapitulos = null)
         {
-            string t = titulo.Trim();
-
-            if (MangaExisteNoCatalogo(t))
-                throw new InvalidOperationException("Esse mangá já existe no catálogo.");
-
-            var manga = new Manga
+            // O lock garante que a verificação de existência e a adição sejam uma operação única e segura
+            lock (_lock)
             {
-                Titulo = t,
-                TotalCapitulos = totalCapitulos
-            };
+                string t = titulo.Trim();
 
-            _catalogo.Add(manga);
-            AutoSalvar();
-            return manga;
+                if (MangaExisteNoCatalogo(t))
+                    throw new InvalidOperationException("Esse mangá já existe no catálogo.");
+
+                var manga = new Manga
+                {
+                    Titulo = t,
+                    TotalCapitulos = totalCapitulos
+                };
+
+                _catalogo.Add(manga);
+
+                // O AutoSalvar será chamado ainda dentro da proteção do lock
+                AutoSalvar();
+
+                return manga;
+            }
         }
 
         public void DefinirTotalCapitulos(Guid mangaId, int? totalCapitulos)
@@ -178,57 +186,68 @@ namespace MangaTracker.Services
         // =========================
         public void CarregarDados()
         {
-            var dados = _storage.Carregar();
-
-            _usuarios.Clear();
-            _usuarios.AddRange(dados.Usuarios);
-
-            if (dados.UsuarioAtualId != Guid.Empty)
-                _usuarioAtualId = dados.UsuarioAtualId;
-
-            // Se não tem usuários ainda, cria um padrão
-            if (_usuarios.Count == 0)
+            // O lock garante que ninguém mexa nas listas enquanto o sistema carrega
+            lock (_lock)
             {
-                var padrao = new Usuario { Nome = "Rafael" };
-                _usuarios.Add(padrao);
-                _usuarioAtualId = padrao.Id;
-            }
+                var dados = _storage.Carregar();
 
-            _catalogo.Clear();
-            _catalogo.AddRange(dados.Catalogo);
+                // Limpa e recarrega os usuários
+                _usuarios.Clear();
+                _usuarios.AddRange(dados.Usuarios);
 
-            _minhaLista.Clear();
-            _minhaLista.AddRange(dados.MinhaLista);
+                if (dados.UsuarioAtualId != Guid.Empty)
+                    _usuarioAtualId = dados.UsuarioAtualId;
 
-            // MIGRAÇÃO: leituras antigas sem UsuarioId vão para o usuário atual
-            bool migrou = false;
-
-            for (int i = 0; i < _minhaLista.Count; i++)
-            {
-                if (_minhaLista[i].UsuarioId == Guid.Empty)
+                // Se não tem usuários ainda, cria um padrão (Rafael)
+                if (_usuarios.Count == 0)
                 {
-                    _minhaLista[i].UsuarioId = _usuarioAtualId;
-                    migrou = true;
+                    var padrao = new Usuario { Nome = "Rafael" };
+                    _usuarios.Add(padrao);
+                    _usuarioAtualId = padrao.Id;
                 }
+
+                // Limpa e recarrega o catálogo de mangás
+                _catalogo.Clear();
+                _catalogo.AddRange(dados.Catalogo);
+
+                // Limpa e recarrega a lista de leitura
+                _minhaLista.Clear();
+                _minhaLista.AddRange(dados.MinhaLista);
+
+                // MIGRAÇÃO: leituras antigas sem UsuarioId vão para o usuário atual
+                bool migrou = false;
+
+                for (int i = 0; i < _minhaLista.Count; i++)
+                {
+                    if (_minhaLista[i].UsuarioId == Guid.Empty)
+                    {
+                        _minhaLista[i].UsuarioId = _usuarioAtualId;
+                        migrou = true;
+                    }
+                }
+
+                // Se houve migração, salva o arquivo JSON corrigido
+                if (migrou)
+                    SalvarDados();
             }
-
-            if (migrou)
-                SalvarDados();
-
         }
 
 
         public void SalvarDados()
         {
-            var dados = new DadosApp
+            // O código só entra aqui se o cadeado estiver livre
+            lock (_lock)
             {
-                Usuarios = _usuarios.ToList(),
-                UsuarioAtualId = _usuarioAtualId,
-                Catalogo = _catalogo.ToList(),
-                MinhaLista = _minhaLista.ToList()
-            };
+                // Aqui dentro fica o seu código que você já tem:
+                var dados = new DadosApp
+                {
+                    Catalogo = _catalogo.ToList(),
+                    Usuarios = _usuarios.ToList()
+                    // ... suas outras listas
+                };
 
-            _storage.Salvar(dados);
+                _storage.Salvar(dados);
+            } // Quando chega aqui, ele "destranca" a porta para o próximo
         }
 
 
