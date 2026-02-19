@@ -1,0 +1,122 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Manga Tracker - Home</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #121212;
+            color: white;
+            margin: 0;
+        }
+
+        /* BARRA DO TOPO */
+        .navbar {
+            background: #000;
+            padding: 15px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid #e21;
+        }
+
+        .logo {
+            font-size: 1.5em;
+            font-weight: bold;
+            text-decoration: none;
+            color: white;
+        }
+
+            .logo span {
+                color: #e21;
+            }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-login {
+            background: transparent;
+            color: white;
+            border: 1px solid white;
+        }
+
+        .btn-cadastro {
+            background: #e21;
+            color: white;
+        }
+
+        .btn-login:hover {
+            background: white;
+            color: black;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 20px;
+            text-align: center;
+        }
+
+        .welcome-section {
+            margin-bottom: 50px;
+            padding: 40px;
+            background: #1e1e1e;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="#" class="logo">MANGA<span>TRACKER</span></a>
+
+        <div class="nav-buttons">
+            <a href="login.html" class="btn btn-login">Entrar</a>
+            <a href="cadastro.html" class="btn btn-cadastro">Criar Conta</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="welcome-section">
+            <h1>Organize sua coleção de mangás</h1>
+            <p>Acompanhe seus capítulos de Chainsaw Man, Demon Slayer e muito mais!</p>
+            <br>
+            <a href="#" class="btn btn-cadastro" style="font-size: 1.2em;">Começar Agora Gratuitamente</a>
+        </div>
+
+        <h2 style="text-align: left;">Mangás no Catálogo</h2>
+        <div id="manga-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; text-align: left;">
+        </div>
+    </div>
+
+    <script>
+        // O código de carregar os mangás continua o mesmo
+        async function carregar() {
+            try {
+                const res = await fetch('/api/catalogo');
+                const dados = await res.json();
+                const container = document.getElementById('manga-list');
+                container.innerHTML = dados.map(m => `
+                        <div style="background: #2d2d2d; padding: 15px; border-radius: 10px;">
+                            <strong>${m.titulo}</strong><br>
+                            <small>Capítulos: ${m.totalCapitulos || '?'}</small>
+                        </div>
+                    `).join('');
+            } catch (e) { console.error("Erro ao carregar"); }
+        }
+        carregar();
+    </script>
+</body>
+</html>

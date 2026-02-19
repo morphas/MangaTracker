@@ -1,0 +1,130 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Manga Tracker - Criar Conta</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #121212;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .cadastro-card {
+            background: #1e1e1e;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 400px;
+            border-top: 5px solid #e21;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-size: 0.9em;
+            color: #aaa;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0 15px 0;
+            border-radius: 5px;
+            border: 1px solid #333;
+            background: #2d2d2d;
+            color: white;
+            box-sizing: border-box;
+        }
+
+        .btn-cadastrar {
+            width: 100%;
+            padding: 12px;
+            background: #e21;
+            border: none;
+            color: white;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+            .btn-cadastrar:hover {
+                background: #ff3333;
+            }
+
+        .link-voltar {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: #aaa;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="cadastro-card">
+        <h2>Criar Nova Conta</h2>
+
+        <label>Nome de Usuário</label>
+        <input type="text" id="novoUsuario" placeholder="Ex: RafaelProgramador">
+
+        <label>E-mail</label>
+        <input type="email" id="email" placeholder="seu@email.com">
+
+        <label>Senha</label>
+        <input type="password" id="senha" placeholder="Crie uma senha forte">
+
+        <button class="btn-cadastrar" onclick="realizarCadastro()">Criar Minha Conta</button>
+
+        <a href="index.html" class="link-voltar">← Voltar para a Home</a>
+    </div>
+
+    <script>
+        async function realizarCadastro() {
+            // 1. Pegamos o que você digitou nas caixinhas
+            const nome = document.getElementById('novoUsuario').value;
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('senha').value;
+
+            // Verificamos se você não esqueceu nada
+            if (!nome || !email || !senha) {
+                alert('Por favor, preencha todos os campos.');
+                return;
+            }
+
+            try {
+                // 2. O "Garçom" (fetch) leva os dados para a sua API no C#
+                const resposta = await fetch('/api/usuario/cadastrar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome, email, senha })
+                });
+
+                const resultado = await resposta.json();
+
+                // 3. Verificamos se a Cozinha (C#) aceitou ou deu erro
+                if (resposta.ok) {
+                    alert('Sucesso: ' + resultado.mensagem);
+                    window.location.href = 'login.html'; // Te manda para o login
+                } else {
+                    // Se o nome já existir, o C# manda o erro e ele aparece aqui!
+                    alert('Erro: ' + resultado.erro);
+                }
+            } catch (erro) {
+                alert('Erro ao conectar com o servidor. Verifique se deu Play no Visual Studio.');
+            }
+        }
+    </script>
+</body>
+</html>

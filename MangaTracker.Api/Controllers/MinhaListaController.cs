@@ -16,7 +16,6 @@ namespace MangaTracker.Api.Controllers
         }
 
         // GET: api/minhalista
-        // Lista todas as leituras do usuário atual (com dados do mangá + leitura)
         [HttpGet]
         public ActionResult<IEnumerable<MinhaLeituraDto>> Get()
         {
@@ -35,7 +34,7 @@ namespace MangaTracker.Api.Controllers
             return Ok(lista);
         }
 
-        // GET: api/minhalista/status/2  (1=PretendoLer, 2=Lendo, 3=Concluido)
+        // GET: api/minhalista/status/2 (1=PretendoLer, 2=Lendo, 3=Concluido)
         [HttpGet("status/{status:int}")]
         public ActionResult<IEnumerable<MinhaLeituraDto>> GetPorStatus(int status)
         {
@@ -44,7 +43,9 @@ namespace MangaTracker.Api.Controllers
 
             var st = (StatusLeitura)status;
 
-            var lista = _service.ListarMinhaListaPorStatus(st)
+            // CORREÇÃO: Pegamos a lista geral e filtramos aqui no Controller
+            var lista = _service.ListarMinhaLista()
+                .Where(x => x.Leitura.Status == st)
                 .OrderBy(x => x.Manga.Titulo, StringComparer.CurrentCultureIgnoreCase)
                 .Select(x => new MinhaLeituraDto(
                     x.Manga.Id,
@@ -60,7 +61,6 @@ namespace MangaTracker.Api.Controllers
         }
 
         // POST: api/minhalista
-        // Adiciona um mangá (do catálogo) na sua lista de leitura
         public record AdicionarMinhaListaDto(Guid MangaId, int Status, int? CapituloAtual);
 
         [HttpPost]
@@ -86,7 +86,6 @@ namespace MangaTracker.Api.Controllers
         }
 
         // PUT: api/minhalista/{mangaId}
-        // Atualiza capítulo atual e (opcionalmente) o status
         public record AtualizarProgressoDto(int CapituloAtual, int? Status);
 
         [HttpPut("{mangaId:guid}")]
@@ -96,7 +95,6 @@ namespace MangaTracker.Api.Controllers
                 return BadRequest(new { erro = "mangaId inválido." });
 
             StatusLeitura? novoStatus = null;
-
             if (dto.Status.HasValue)
             {
                 if (!Enum.IsDefined(typeof(StatusLeitura), dto.Status.Value))
@@ -116,7 +114,7 @@ namespace MangaTracker.Api.Controllers
             }
         }
 
-        // DTO de retorno (pra não devolver classes internas cruas)
+        // DTO de retorno
         public record MinhaLeituraDto(
             Guid MangaId,
             string Titulo,

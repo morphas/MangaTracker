@@ -15,46 +15,39 @@ namespace MangaTracker.Api.Controllers
             _service = service;
         }
 
-        // GET: api/catalogo
+        public record CadastrarMangaDto(string Titulo, int? TotalCapitulos);
+
         [HttpGet]
         public ActionResult<IEnumerable<Manga>> Get()
         {
-            var lista = _service
-                .ListarCatalogo()
-                .OrderBy(m => m.Titulo, StringComparer.CurrentCultureIgnoreCase)
-                .ToList();
-
-            return Ok(lista);
+            return Ok(_service.ListarCatalogo());
         }
 
-        // GET: api/catalogo/{id}
         [HttpGet("{id:guid}")]
         public ActionResult<Manga> GetById(Guid id)
         {
             var manga = _service.BuscarMangaPorId(id);
-            if (manga is null)
-                return NotFound(new { erro = "Mangá não encontrado." });
-
+            if (manga is null) return NotFound();
             return Ok(manga);
         }
 
-        public record CadastrarMangaDto(string Titulo, int? TotalCapitulos);
-
-        // POST: api/catalogo
         [HttpPost]
         public ActionResult<Manga> Post([FromBody] CadastrarMangaDto dto)
         {
+            // Esta linha deve usar 'ObterUsuarioLogado' exatamente como na sua Interface
+            var usuarioLogado = _service.ObterUsuarioLogado();
+
+            if (usuarioLogado == null || !usuarioLogado.EhAdmin)
+            {
+                return Forbid();
+            }
+
             if (dto is null || string.IsNullOrWhiteSpace(dto.Titulo))
                 return BadRequest(new { erro = "Título é obrigatório." });
-
-            if (dto.TotalCapitulos.HasValue && dto.TotalCapitulos.Value < 1)
-                return BadRequest(new { erro = "TotalCapitulos deve ser >= 1." });
 
             try
             {
                 var manga = _service.CadastrarNoCatalogo(dto.Titulo, dto.TotalCapitulos);
-
-                // retorna 201 + Location apontando para o GET por id
                 return CreatedAtAction(nameof(GetById), new { id = manga.Id }, manga);
             }
             catch (Exception ex)

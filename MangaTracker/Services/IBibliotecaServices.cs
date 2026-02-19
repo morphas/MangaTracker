@@ -6,7 +6,9 @@ namespace MangaTracker.Services
 {
     public interface IBibliotecaService
     {
-        // Catálogo
+        // =========================
+        // CATÁLOGO
+        // =========================
         IReadOnlyList<Manga> ListarCatalogo();
         Manga? BuscarMangaPorId(Guid id);
         Manga? BuscarMangaPorTitulo(string titulo);
@@ -14,22 +16,34 @@ namespace MangaTracker.Services
         Manga CadastrarNoCatalogo(string titulo, int? totalCapitulos = null);
         void DefinirTotalCapitulos(Guid mangaId, int? totalCapitulos);
 
-        // Minha lista (Leituras)
+        // =========================
+        // MINHA LISTA (LEITURAS)
+        // =========================
         IReadOnlyList<(Manga Manga, Leitura Leitura)> ListarMinhaLista();
-        IReadOnlyList<(Manga Manga, Leitura Leitura)> ListarMinhaListaPorStatus(StatusLeitura status);
         bool EstaNaMinhaLista(Guid mangaId);
         void AdicionarNaMinhaLista(Guid mangaId, StatusLeitura status, int? capituloAtual = null);
         void AtualizarLeitura(Guid mangaId, int capituloAtual, StatusLeitura? status = null);
 
-        // Usuários
+        // =========================
+        // USUÁRIOS
+        // =========================
+        // Este é o método principal que o seu Controller usa para checar se você é Admin
+        Usuario? ObterUsuarioLogado();
+
         IReadOnlyList<Usuario> ListarUsuarios();
-        Usuario? UsuarioAtual();
-        Usuario CriarUsuario(string nome);
         bool DefinirUsuarioAtual(Guid usuarioId);
 
-        // Persistência
+        // =========================
+        // PERSISTÊNCIA (JSON)
+        // =========================
         void CarregarDados();
         void SalvarDados();
         string CaminhoDoArquivoDeDados();
+
+        void CadastrarNovoUsuario(string nome, string email, string senha);
+
+        // ADICIONE ESTA LINHA ABAIXO:
+        Usuario ValidarLogin(string identificador, string senha);
     }
 }
+    

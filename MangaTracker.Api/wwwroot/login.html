@@ -1,0 +1,119 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Manga Tracker - Login</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #121212;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-card {
+            background: #1e1e1e;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 400px;
+            border-top: 5px solid #e21;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #333;
+            background: #2d2d2d;
+            color: white;
+            box-sizing: border-box;
+        }
+
+        .btn-entrar {
+            width: 100%;
+            padding: 12px;
+            background: #e21;
+            border: none;
+            color: white;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+            .btn-entrar:hover {
+                background: #ff3333;
+            }
+
+        .link-voltar {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: #aaa;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h2>Acessar Minha Lista</h2>
+
+        <label style="font-size: 0.8em; color: #aaa;">Usuário ou E-mail</label>
+        <input type="text" id="identificador" placeholder="Ex: Morphas ou admin@mangatacker.com">
+
+        <label style="font-size: 0.8em; color: #aaa;">Senha</label>
+        <input type="password" id="senha" placeholder="Sua senha secreta">
+
+        <button class="btn-entrar" onclick="fazerLogin()">Entrar</button>
+
+        <a href="index.html" class="link-voltar">← Voltar para a Home</a>
+    </div>
+
+    <script>
+        async function fazerLogin() {
+            const identificador = document.getElementById('identificador').value;
+            const senha = document.getElementById('senha').value;
+
+            if (!identificador || !senha) {
+                alert("Por favor, preencha todos os campos.");
+                return;
+            }
+
+            try {
+                // Enviamos para a API conferir os dados
+                const resposta = await fetch('/api/usuario/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identificador, senha })
+                });
+
+                const resultado = await resposta.json();
+
+                if (resposta.ok) {
+                    alert('Bem-vindo de volta, ' + resultado.nome + '!');
+                    // Salva que o usuário está logado (vamos usar isso depois)
+                    localStorage.setItem('usuarioLogado', JSON.stringify(resultado));
+                    window.location.href = 'index.html';
+                } else {
+                    alert(resultado.erro);
+                }
+            } catch (erro) {
+                alert("Erro ao conectar com o servidor.");
+            }
+        }
+    </script>
+</body>
+</html>
