@@ -43,6 +43,17 @@ namespace MangaTracker.Api.Controllers
                 return BadRequest(new { erro = ex.Message });
             }
         }
+        // GET: api/usuario/atual
+        [HttpGet("atual")]
+        public IActionResult UsuarioAtual()
+        {
+            var usuario = _service.ObterUsuarioLogado();
+
+            if (usuario == null)
+                return Ok(new { logado = false });
+
+            return Ok(new { logado = true, nome = usuario.Nome, isAdmin = usuario.EhAdmin });
+        }
     }
 
     // Pacotinhos de dados (Records)
