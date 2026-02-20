@@ -1,38 +1,70 @@
+using MangaTracker.Api.Data;
+using MangaTracker.Api.Services;
 using MangaTracker.Services;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Adiciona as ferramentas do sistema
+// ==========================
+// CONFIGURAÇÕES BÁSICAS
+// ==========================
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Registra o serviço que guarda seus mangás
-builder.Services.AddSingleton<IBibliotecaService, BibliotecaService>();
+// ==========================
+// CONNECTION STRING
+// ==========================
+
+var connectionString = builder.Configuration.GetConnectionString("Default");
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new Exception("ConnectionStrings:Default não configurada. Verifique appsettings.json ou variáveis do Render.");
+}
+
+builder.Services.AddDbContext<MangaTrackerDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
+// ==========================
+// SERVICE PRINCIPAL
+// ==========================
+
+builder.Services.AddScoped<IBibliotecaService, BibliotecaServiceDb>();
 
 var app = builder.Build();
 
-// Carrega seus dados (JSON) assim que o app liga
+// ==========================
+// APLICA MIGRATIONS AUTOMATICAMENTE
+// ==========================
+
 using (var scope = app.Services.CreateScope())
 {
-    var service = scope.ServiceProvider.GetRequiredService<IBibliotecaService>();
-    service.CarregarDados();
+    var db = scope.ServiceProvider.GetRequiredService<MangaTrackerDbContext>();
+    db.Database.Migrate();
 }
 
-// Configura o Swagger para testes
+// ==========================
+// SWAGGER (DEV ONLY)
+// ==========================
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+// ==========================
+// PIPELINE
+// ==========================
+
 app.UseHttpsRedirection();
 app.UseAuthorization();
 
-// --- PEÇAS DO SEU SITE ---
-app.UseDefaultFiles(); // Ativa o index.html como página principal
-app.UseStaticFiles();  // Dá permissão para ler a pasta wwwroot
-// -------------------------
+// Ativa site estático
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.MapControllers();
 
