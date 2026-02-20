@@ -14,7 +14,7 @@ namespace MangaTracker.Api.Controllers
             _service = service;
         }
 
-        // Função para Criar Usuário
+        // POST: api/usuario/cadastrar
         [HttpPost("cadastrar")]
         public IActionResult Cadastrar([FromBody] CadastroDto dados)
         {
@@ -29,34 +29,52 @@ namespace MangaTracker.Api.Controllers
             }
         }
 
-        // Função para Fazer Login (Morphas ou Email)
+        // POST: api/usuario/login
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginDto dados)
         {
             try
             {
                 var usuario = _service.ValidarLogin(dados.Identificador, dados.Senha);
-                return Ok(new { nome = usuario.Nome, isAdmin = usuario.EhAdmin });
+
+                return Ok(new
+                {
+                    id = usuario.Id,
+                    nome = usuario.Nome,
+                    isAdmin = usuario.EhAdmin
+                });
             }
             catch (Exception ex)
             {
                 return BadRequest(new { erro = ex.Message });
             }
         }
-        // GET: api/usuario/atual
-        [HttpGet("atual")]
-        public IActionResult UsuarioAtual()
-        {
-            var usuario = _service.ObterUsuarioLogado();
 
+        // GET: api/usuario/atual
+        // FASE 1 - usa header X-User-Id tipado
+        [HttpGet("atual")]
+        public IActionResult UsuarioAtual([FromHeader(Name = "X-User-Id")] Guid? userId)
+        {
+            if (userId == null)
+                return Ok(new { logado = false });
+
+            if (!_service.DefinirUsuarioAtual(userId.Value))
+                return Ok(new { logado = false });
+
+            var usuario = _service.ObterUsuarioLogado();
             if (usuario == null)
                 return Ok(new { logado = false });
 
-            return Ok(new { logado = true, nome = usuario.Nome, isAdmin = usuario.EhAdmin });
+            return Ok(new
+            {
+                logado = true,
+                id = usuario.Id,
+                nome = usuario.Nome,
+                isAdmin = usuario.EhAdmin
+            });
         }
     }
 
-    // Pacotinhos de dados (Records)
     public record CadastroDto(string Nome, string Email, string Senha);
     public record LoginDto(string Identificador, string Senha);
 }

@@ -141,7 +141,7 @@ namespace MangaTracker.Api.Services
                 MangaId = mangaId,
                 Status = status,
                 CapituloAtual = capituloAtual ?? 0,
-                UltimaLeituraEm = DateTime.Now
+                UltimaLeituraEm = DateTime.UtcNow
             };
 
             _db.Leituras.Add(leitura);
@@ -156,7 +156,7 @@ namespace MangaTracker.Api.Services
             if (leitura == null) return;
 
             leitura.CapituloAtual = Math.Max(0, capituloAtual);
-            leitura.UltimaLeituraEm = DateTime.Now;
+            leitura.UltimaLeituraEm = DateTime.UtcNow;
             if (status.HasValue) leitura.Status = status.Value;
 
             _db.SaveChanges();

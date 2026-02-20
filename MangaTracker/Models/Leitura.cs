@@ -11,6 +11,6 @@ namespace MangaTracker.Models
 
         public int CapituloAtual { get; set; } = 0;
         public DateTime? UltimaLeituraEm { get; set; } = null;
-        public DateTime AdicionadoEm { get; set; } = DateTime.Now;
+        public DateTime AdicionadoEm { get; set; } = DateTime.UtcNow;
     }
 }

@@ -15,10 +15,48 @@ namespace MangaTracker.Api.Controllers
             _service = service;
         }
 
+        private bool TrySetUser(Guid? userId, out IActionResult? erro)
+        {
+            erro = null;
+
+            if (userId is null)
+            {
+                erro = Unauthorized(new { erro = "Usuário não informado no header X-User-Id." });
+                return false;
+            }
+
+            if (!_service.DefinirUsuarioAtual(userId.Value))
+            {
+                erro = Unauthorized(new { erro = "Usuário não encontrado." });
+                return false;
+            }
+
+            return true;
+        }
+
+        // DTO de retorno
+        public record MinhaLeituraDto(
+            Guid MangaId,
+            string Titulo,
+            int? TotalCapitulos,
+            StatusLeitura Status,
+            int CapituloAtual,
+            DateTime? UltimaLeituraEm
+        );
+
+        // POST: api/minhalista
+        public record AdicionarMinhaListaDto(Guid MangaId, int Status, int? CapituloAtual);
+
+        // PUT: api/minhalista/{mangaId}
+        public record AtualizarProgressoDto(int CapituloAtual, int? Status);
+
         // GET: api/minhalista
         [HttpGet]
-        public ActionResult<IEnumerable<MinhaLeituraDto>> Get()
+        public IActionResult Get([FromHeader(Name = "X-User-Id")] Guid? userId)
         {
+            if (!TrySetUser(userId, out var erro))
+                return erro!;
+
             var lista = _service.ListarMinhaLista()
                 .OrderBy(x => x.Manga.Titulo, StringComparer.CurrentCultureIgnoreCase)
                 .Select(x => new MinhaLeituraDto(
@@ -34,16 +72,18 @@ namespace MangaTracker.Api.Controllers
             return Ok(lista);
         }
 
-        // GET: api/minhalista/status/2 (1=PretendoLer, 2=Lendo, 3=Concluido)
+        // GET: api/minhalista/status/2
         [HttpGet("status/{status:int}")]
-        public ActionResult<IEnumerable<MinhaLeituraDto>> GetPorStatus(int status)
+        public IActionResult GetPorStatus([FromHeader(Name = "X-User-Id")] Guid? userId, int status)
         {
+            if (!TrySetUser(userId, out var erro))
+                return erro!;
+
             if (!Enum.IsDefined(typeof(StatusLeitura), status))
                 return BadRequest(new { erro = "Status inválido. Use 1, 2 ou 3." });
 
             var st = (StatusLeitura)status;
 
-            // CORREÇÃO: Pegamos a lista geral e filtramos aqui no Controller
             var lista = _service.ListarMinhaLista()
                 .Where(x => x.Leitura.Status == st)
                 .OrderBy(x => x.Manga.Titulo, StringComparer.CurrentCultureIgnoreCase)
@@ -61,11 +101,14 @@ namespace MangaTracker.Api.Controllers
         }
 
         // POST: api/minhalista
-        public record AdicionarMinhaListaDto(Guid MangaId, int Status, int? CapituloAtual);
-
         [HttpPost]
-        public IActionResult Post([FromBody] AdicionarMinhaListaDto dto)
+        public IActionResult Post(
+            [FromHeader(Name = "X-User-Id")] Guid? userId,
+            [FromBody] AdicionarMinhaListaDto dto)
         {
+            if (!TrySetUser(userId, out var erro))
+                return erro!;
+
             if (dto.MangaId == Guid.Empty)
                 return BadRequest(new { erro = "MangaId é obrigatório." });
 
@@ -86,11 +129,15 @@ namespace MangaTracker.Api.Controllers
         }
 
         // PUT: api/minhalista/{mangaId}
-        public record AtualizarProgressoDto(int CapituloAtual, int? Status);
-
         [HttpPut("{mangaId:guid}")]
-        public IActionResult Put(Guid mangaId, [FromBody] AtualizarProgressoDto dto)
+        public IActionResult Put(
+            [FromHeader(Name = "X-User-Id")] Guid? userId,
+            Guid mangaId,
+            [FromBody] AtualizarProgressoDto dto)
         {
+            if (!TrySetUser(userId, out var erro))
+                return erro!;
+
             if (mangaId == Guid.Empty)
                 return BadRequest(new { erro = "mangaId inválido." });
 
@@ -113,15 +160,5 @@ namespace MangaTracker.Api.Controllers
                 return BadRequest(new { erro = ex.Message });
             }
         }
-
-        // DTO de retorno
-        public record MinhaLeituraDto(
-            Guid MangaId,
-            string Titulo,
-            int? TotalCapitulos,
-            StatusLeitura Status,
-            int CapituloAtual,
-            DateTime? UltimaLeituraEm
-        );
     }
 }

@@ -11,7 +11,31 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("X-User-Id", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Name = "X-User-Id",
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Description = "Informe o GUID do usuário logado"
+    });
+
+    options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "X-User-Id"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
 
 // ==========================
 // CONNECTION STRING
@@ -43,6 +67,10 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<MangaTrackerDbContext>();
     db.Database.Migrate();
+
+    // 🔥 CRIA ADMIN INICIAL SE NÃO EXISTIR
+    var service = scope.ServiceProvider.GetRequiredService<IBibliotecaService>();
+    service.CarregarDados();
 }
 
 // ==========================

@@ -9,6 +9,6 @@ namespace MangaTracker.Models
                         
         public int? TotalCapitulos { get; set; } = null;
 
-        public DateTime CriadoEm { get; set; } = DateTime.Now;
+        public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
     }
 }

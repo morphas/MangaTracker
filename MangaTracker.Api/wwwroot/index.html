@@ -35,6 +35,7 @@
         .nav-buttons {
             display: flex;
             gap: 15px;
+            align-items: center;
         }
 
         .btn {
@@ -44,6 +45,7 @@
             font-weight: bold;
             cursor: pointer;
             border: none;
+            display: inline-block;
         }
 
         .btn-login {
@@ -75,14 +77,80 @@
             background: #1e1e1e;
             border-radius: 20px;
         }
+
+        /* ========= MENU DO USUÁRIO (estilo MAL, bem simples) ========= */
+        .userbox {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .userbtn {
+            background: transparent;
+            color: white;
+            border: 1px solid #333;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+            .userbtn:hover {
+                background: #1e1e1e;
+            }
+
+        .badge {
+            font-size: .75em;
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid #e21;
+            color: #e21;
+            margin-left: 6px;
+        }
+
+        .dropdown {
+            position: absolute;
+            right: 0;
+            top: 44px;
+            background: #111;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            width: 220px;
+            padding: 8px;
+            display: none;
+            box-shadow: 0 10px 25px rgba(0,0,0,.5);
+            z-index: 999;
+        }
+
+            .dropdown a, .dropdown button {
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px 10px;
+                border-radius: 10px;
+                text-decoration: none;
+                background: transparent;
+                border: none;
+                color: #ddd;
+                cursor: pointer;
+                font-size: 0.95em;
+                box-sizing: border-box;
+            }
+
+                .dropdown a:hover, .dropdown button:hover {
+                    background: #1f1f1f;
+                }
     </style>
 </head>
 <body>
 
     <nav class="navbar">
-        <a href="#" class="logo">MANGA<span>TRACKER</span></a>
+        <a href="index.html" class="logo">MANGA<span>TRACKER</span></a>
 
-        <div class="nav-buttons">
+        <!-- Aqui o JS vai renderizar: (Entrar/Criar Conta) OU (Usuário + menu) -->
+        <div class="nav-buttons" id="navArea">
             <a href="login.html" class="btn btn-login">Entrar</a>
             <a href="cadastro.html" class="btn btn-cadastro">Criar Conta</a>
         </div>
@@ -91,32 +159,109 @@
     <div class="container">
         <div class="welcome-section">
             <h1>Organize sua coleção de mangás</h1>
-            <p>Acompanhe seus capítulos de Chainsaw Man, Demon Slayer e muito mais!</p>
+            <p>Acompanhe seus capítulos e mantenha sua lista sempre atualizada.</p>
             <br>
-            <a href="#" class="btn btn-cadastro" style="font-size: 1.2em;">Começar Agora Gratuitamente</a>
+            <a href="cadastro.html" class="btn btn-cadastro" style="font-size: 1.2em;">Começar Agora Gratuitamente</a>
         </div>
 
         <h2 style="text-align: left;">Mangás no Catálogo</h2>
         <div id="manga-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; text-align: left;">
         </div>
+
+        <!-- âncora pro menu "Minha Lista" (mesmo que ainda não exista seção) -->
+        <div id="minha-lista" style="height: 1px;"></div>
     </div>
 
     <script>
-        // O código de carregar os mangás continua o mesmo
-        async function carregar() {
+        // ======= Usuário logado (Fase 1: localStorage) =======
+        function getUsuarioLogado() {
+            try { return JSON.parse(localStorage.getItem('usuarioLogado')); }
+            catch { return null; }
+        }
+
+        function logout() {
+            localStorage.removeItem('usuarioLogado');
+            window.location.reload();
+        }
+
+        // ======= Render do topo (Entrar/Cadastrar OU menu do usuário) =======
+        function renderNav() {
+            const nav = document.getElementById('navArea');
+            const u = getUsuarioLogado();
+
+            if (!u) {
+                nav.innerHTML = `
+                        <a href="login.html" class="btn btn-login">Entrar</a>
+                        <a href="cadastro.html" class="btn btn-cadastro">Criar Conta</a>
+                    `;
+                return;
+            }
+
+            nav.innerHTML = `
+                    <div class="userbox">
+                        <button class="userbtn" id="userBtn">
+                            Olá, ${u.nome}${u.isAdmin ? `<span class="badge">admin</span>` : ''} ▾
+                        </button>
+                        <div class="dropdown" id="dd">
+                            <a href="#minha-lista">📚 Minha Lista <span>›</span></a>
+                            <a href="#" id="perfilBtn">👤 Perfil (em breve) <span>›</span></a>
+                            <button id="logoutBtn">🚪 Sair <span>›</span></button>
+                        </div>
+                    </div>
+                `;
+
+            const btn = document.getElementById('userBtn');
+            const dd = document.getElementById('dd');
+            const perfilBtn = document.getElementById('perfilBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            btn.addEventListener('click', () => {
+                dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+            });
+
+            perfilBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                alert('Perfil (em breve). Na fase 1 vamos manter simples 🙂');
+            });
+
+            logoutBtn.addEventListener('click', () => logout());
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.userbox')) dd.style.display = 'none';
+            });
+        }
+
+        // ======= fetch que SEMPRE manda X-User-Id se estiver logado =======
+        async function apiFetch(url, options = {}) {
+            const u = getUsuarioLogado();
+            const headers = options.headers ? { ...options.headers } : {};
+
+            if (u?.id) headers['X-User-Id'] = u.id;
+
+            return fetch(url, { ...options, headers });
+        }
+
+        // ======= Carregar catálogo =======
+        async function carregarCatalogo() {
             try {
-                const res = await fetch('/api/catalogo');
+                const res = await apiFetch('/api/catalogo');
                 const dados = await res.json();
+
                 const container = document.getElementById('manga-list');
-                container.innerHTML = dados.map(m => `
+                container.innerHTML = (dados || []).map(m => `
                         <div style="background: #2d2d2d; padding: 15px; border-radius: 10px;">
                             <strong>${m.titulo}</strong><br>
-                            <small>Capítulos: ${m.totalCapitulos || '?'}</small>
+                            <small>Capítulos: ${m.totalCapitulos ?? '?'}</small>
                         </div>
                     `).join('');
-            } catch (e) { console.error("Erro ao carregar"); }
+            } catch (e) {
+                console.error("Erro ao carregar catálogo:", e);
+            }
         }
-        carregar();
+
+        // Inicializa
+        renderNav();
+        carregarCatalogo();
     </script>
 </body>
 </html>

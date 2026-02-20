@@ -11,7 +11,7 @@ namespace MangaTracker.Models
         public string Email { get; set; } = "";
         public string Senha { get; set; } = "";
 
-        public DateTime CriadoEm { get; set; } = DateTime.Now;
+        public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
         public bool EhAdmin { get; set; } = false;
     }
 }
