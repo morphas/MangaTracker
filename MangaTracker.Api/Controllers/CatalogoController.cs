@@ -15,13 +15,35 @@ namespace MangaTracker.Api.Controllers
             _service = service;
         }
 
-        public record CadastrarMangaDto(string Titulo, int? TotalCapitulos);
+        public record CadastrarMangaDto( string Titulo,    bool LancadoNoBrasil,    string? Editora);
 
         // GET: api/catalogo
         [HttpGet]
-        public ActionResult<IEnumerable<Manga>> Get()
+        public ActionResult<IEnumerable<Manga>> Get(
+    [FromQuery] bool? lancadoNoBrasil,
+    [FromQuery] string? editora,
+    [FromQuery] string? q)
         {
-            return Ok(_service.ListarCatalogo());
+            var lista = _service.ListarCatalogo().AsQueryable();
+
+            if (lancadoNoBrasil.HasValue)
+                lista = lista.Where(m => m.LancadoNoBrasil == lancadoNoBrasil.Value);
+
+            if (!string.IsNullOrWhiteSpace(editora))
+            {
+                var key = editora.Trim().ToLowerInvariant();
+                lista = lista.Where(m => m.EditoraKey == key);
+            }
+
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                var termo = q.Trim().ToLowerInvariant();
+                lista = lista.Where(m => m.Titulo.ToLower().Contains(termo));
+            }
+
+            return Ok(lista
+                .OrderBy(m => m.Titulo, StringComparer.CurrentCultureIgnoreCase)
+                .ToList());
         }
 
         // GET: api/catalogo/{id}
@@ -57,7 +79,7 @@ namespace MangaTracker.Api.Controllers
 
             try
             {
-                var manga = _service.CadastrarNoCatalogo(dto.Titulo, dto.TotalCapitulos);
+                var manga = _service.CadastrarNoCatalogo(dto.Titulo, dto.LancadoNoBrasil, dto.Editora);
                 return CreatedAtAction(nameof(GetById), new { id = manga.Id }, manga);
             }
             catch (Exception ex)

@@ -94,12 +94,29 @@ namespace MangaTracker.Api.Services
 
         public bool MangaExisteNoCatalogo(string titulo) => BuscarMangaPorTitulo(titulo) != null;
 
-        public Manga CadastrarNoCatalogo(string titulo, int? totalCapitulos = null)
+        private static string? NormalizeEditoraKey(string? s)
+        {
+            if (string.IsNullOrWhiteSpace(s)) return null;
+            return s.Trim().ToLowerInvariant();
+        }
+
+        public Manga CadastrarNoCatalogo(string titulo, bool lancadoNoBrasil, string? editora)
         {
             var t = titulo.Trim();
-            if (MangaExisteNoCatalogo(t)) throw new InvalidOperationException("Esse mangá já existe no catálogo.");
 
-            var manga = new Manga { Titulo = t, TotalCapitulos = totalCapitulos };
+            if (MangaExisteNoCatalogo(t))
+                throw new InvalidOperationException("Esse mangá já existe no catálogo.");
+
+            if (!lancadoNoBrasil)
+                editora = null;
+
+            var manga = new Manga
+            {
+                Titulo = t,
+                LancadoNoBrasil = lancadoNoBrasil,
+                Editora = string.IsNullOrWhiteSpace(editora) ? null : editora.Trim()
+            };
+
             _db.Catalogo.Add(manga);
             _db.SaveChanges();
             return manga;

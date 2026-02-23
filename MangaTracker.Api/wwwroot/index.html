@@ -1,134 +1,264 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <title>Manga Tracker - Home</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MangaTracker - Home</title>
+
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
-            background-color: #121212;
+            background-color: #0f0f0f;
             color: white;
             margin: 0;
         }
 
-        /* BARRA DO TOPO */
+        /* ====== NAVBAR ====== */
         .navbar {
             background: #000;
-            padding: 15px 50px;
+            padding: 16px 50px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 3px solid #e21;
+            border-bottom: 3px solid #e50914;
         }
 
         .logo {
             font-size: 1.5em;
-            font-weight: bold;
+            font-weight: 800;
             text-decoration: none;
             color: white;
+            letter-spacing: .5px;
         }
 
             .logo span {
-                color: #e21;
+                color: #e50914;
             }
 
-        .nav-buttons {
+        .menu {
             display: flex;
-            gap: 15px;
+            gap: 14px;
             align-items: center;
         }
 
-        .btn {
-            padding: 10px 20px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: bold;
-            cursor: pointer;
-            border: none;
-            display: inline-block;
+            .menu a {
+                color: white;
+                text-decoration: none;
+                font-weight: 700;
+                padding: 10px 14px;
+                border-radius: 10px;
+                border: 1px solid transparent;
+            }
+
+                .menu a:hover {
+                    background: #151515;
+                    border-color: #2a2a2a;
+                }
+
+        .btn-primary {
+            background: #e50914;
+            border-color: #e50914 !important;
         }
 
-        .btn-login {
-            background: transparent;
-            color: white;
-            border: 1px solid white;
-        }
+            .btn-primary:hover {
+                background: #ff1a1a;
+                border-color: #ff1a1a !important;
+            }
 
-        .btn-cadastro {
-            background: #e21;
-            color: white;
-        }
-
-        .btn-login:hover {
-            background: white;
-            color: black;
-        }
-
+        /* ====== LAYOUT ====== */
         .container {
-            max-width: 900px;
-            margin: 30px auto;
+            max-width: 1200px;
+            margin: 28px auto;
             padding: 0 20px;
-            text-align: center;
         }
 
-        .welcome-section {
-            margin-bottom: 50px;
-            padding: 40px;
-            background: #1e1e1e;
-            border-radius: 20px;
+        .grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            align-items: start;
         }
 
-        /* ========= MENU DO USUÁRIO (estilo MAL, bem simples) ========= */
-        .userbox {
-            position: relative;
+        .card {
+            background: #151515;
+            border: 1px solid #222;
+            border-radius: 18px;
+            padding: 22px;
+            box-shadow: 0 14px 35px rgba(0,0,0,0.5);
+        }
+
+        .hero {
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 34px;
+            background: linear-gradient(135deg, #151515, #0f0f0f);
+        }
+
+            .hero h1 {
+                margin: 0 0 10px 0;
+                font-size: 2.2em;
+                line-height: 1.15;
+            }
+
+            .hero p {
+                margin: 0 0 18px 0;
+                color: #cfcfcf;
+                max-width: 720px;
+            }
+
+        .cta {
+            display: inline-block;
+            background: #e50914;
+            color: white;
+            font-weight: 800;
+            padding: 12px 18px;
+            border-radius: 12px;
+            text-decoration: none;
+            width: fit-content;
+        }
+
+            .cta:hover {
+                background: #ff1a1a;
+            }
+
+        .ad {
+            height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            border: 1px dashed #2a2a2a;
+            background: #111;
+        }
+
+            .ad.tall {
+                height: 220px;
+            }
+
+        .side-title {
             display: flex;
             align-items: center;
             gap: 10px;
+            margin: 0 0 10px 0;
+            font-size: 1.1em;
+            font-weight: 800;
+        }
+
+        .list {
+            margin-top: 10px;
+            border-top: 1px solid #242424;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #1f1f1f;
+        }
+
+            .row:last-child {
+                border-bottom: none;
+            }
+
+        .rank {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            background: #1d1d1d;
+            border: 1px solid #2a2a2a;
+            color: #ddd;
+            font-size: 12px;
+            margin-right: 10px;
+        }
+
+        .row-left {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+        }
+
+        .name {
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .meta {
+            color: #8c8c8c;
+            font-size: .85em;
+            margin-top: 2px;
+        }
+
+        .right {
+            text-align: right;
+            color: #cfcfcf;
+            font-size: .9em;
+            white-space: nowrap;
+        }
+
+        .stack {
+            display: grid;
+            gap: 16px;
+        }
+
+        /* ====== Dropdown do usuário (estilo MAL) ====== */
+        .userbox {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
         }
 
         .userbtn {
             background: transparent;
             color: white;
-            border: 1px solid #333;
-            padding: 10px 12px;
-            border-radius: 8px;
+            border: 1px solid #2a2a2a;
+            padding: 10px 14px;
+            border-radius: 10px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 800;
         }
 
             .userbtn:hover {
-                background: #1e1e1e;
+                background: #151515;
             }
 
-        .badge {
-            font-size: .75em;
+        .badge-admin {
+            font-size: 0.75em;
             padding: 2px 8px;
             border-radius: 999px;
-            border: 1px solid #e21;
-            color: #e21;
-            margin-left: 6px;
+            border: 1px solid #e50914;
+            color: #e50914;
+            margin-left: 8px;
         }
 
         .dropdown {
             position: absolute;
             right: 0;
-            top: 44px;
-            background: #111;
+            top: 48px;
+            width: 240px;
+            background: #0f0f0f;
             border: 1px solid #2a2a2a;
-            border-radius: 12px;
-            width: 220px;
+            border-radius: 14px;
             padding: 8px;
             display: none;
-            box-shadow: 0 10px 25px rgba(0,0,0,.5);
-            z-index: 999;
+            box-shadow: 0 14px 30px rgba(0,0,0,0.6);
+            z-index: 9999;
         }
 
-            .dropdown a, .dropdown button {
+            .dropdown a,
+            .dropdown button {
                 width: 100%;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                padding: 10px 10px;
+                padding: 10px 12px;
                 border-radius: 10px;
                 text-decoration: none;
                 background: transparent;
@@ -139,41 +269,89 @@
                 box-sizing: border-box;
             }
 
-                .dropdown a:hover, .dropdown button:hover {
-                    background: #1f1f1f;
+                .dropdown a:hover,
+                .dropdown button:hover {
+                    background: #1b1b1b;
                 }
+
+            .dropdown .sep {
+                height: 1px;
+                background: #242424;
+                margin: 6px 0;
+            }
+
+        /* responsivo simples */
+        @media (max-width: 980px) {
+            .navbar {
+                padding: 14px 18px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
-<body>
 
+<body>
     <nav class="navbar">
         <a href="index.html" class="logo">MANGA<span>TRACKER</span></a>
 
-        <!-- Aqui o JS vai renderizar: (Entrar/Criar Conta) OU (Usuário + menu) -->
-        <div class="nav-buttons" id="navArea">
-            <a href="login.html" class="btn btn-login">Entrar</a>
-            <a href="cadastro.html" class="btn btn-cadastro">Criar Conta</a>
+        <!-- o JS vai trocar isso quando estiver logado -->
+        <div class="menu" id="menuArea">
+            <a href="login.html">Entrar</a>
+            <a class="btn-primary" href="cadastro.html">Criar Conta</a>
         </div>
     </nav>
 
     <div class="container">
-        <div class="welcome-section">
-            <h1>Organize sua coleção de mangás</h1>
-            <p>Acompanhe seus capítulos e mantenha sua lista sempre atualizada.</p>
-            <br>
-            <a href="cadastro.html" class="btn btn-cadastro" style="font-size: 1.2em;">Começar Agora Gratuitamente</a>
-        </div>
+        <div class="grid">
 
-        <h2 style="text-align: left;">Mangás no Catálogo</h2>
-        <div id="manga-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; text-align: left;">
-        </div>
+            <!-- COLUNA ESQUERDA -->
+            <div class="stack">
+                <div class="card hero">
+                    <h1>O maior catálogo de mangás do Brasil <span style="color:#e50914">BR</span></h1>
+                    <p>Organize sua coleção, acompanhe capítulos e descubra os mangás mais lidos do momento.</p>
+                    <a class="cta" href="cadastro.html">Criar Conta Gratuitamente</a>
+                </div>
 
-        <!-- âncora pro menu "Minha Lista" (mesmo que ainda não exista seção) -->
-        <div id="minha-lista" style="height: 1px;"></div>
+                <div class="card ad">
+                    Espaço para propaganda
+                </div>
+
+                <div class="card ad tall">
+                    Espaço para propaganda (maior)
+                </div>
+
+                <div class="card ad">
+                    Espaço livre (futuro: notícias / destaques / etc.)
+                </div>
+            </div>
+
+            <!-- COLUNA DIREITA -->
+            <div class="stack">
+                <!-- TOP LANÇAMENTOS -->
+                <div class="card">
+                    <div class="side-title">🆕 Top Lançamentos do Mês</div>
+                    <div class="list" id="topLancamentos">
+                        <!-- preenchido pelo JS (por enquanto fixo) -->
+                    </div>
+                </div>
+
+                <!-- TOP MAIS LIDOS -->
+                <div class="card">
+                    <div class="side-title">🔥 Top Mangás Mais Lidos do Mês</div>
+                    <div class="list" id="topMaisLidos">
+                        <!-- preenchido pelo JS (por enquanto fixo) -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </div>
 
     <script>
-        // ======= Usuário logado (Fase 1: localStorage) =======
+        // ======= Login (Fase 1: localStorage) =======
         function getUsuarioLogado() {
             try { return JSON.parse(localStorage.getItem('usuarioLogado')); }
             catch { return null; }
@@ -184,84 +362,116 @@
             window.location.reload();
         }
 
-        // ======= Render do topo (Entrar/Cadastrar OU menu do usuário) =======
-        function renderNav() {
-            const nav = document.getElementById('navArea');
+        // ======= Menu topo com dropdown estilo MAL =======
+        function renderMenuTopo() {
+            const area = document.getElementById('menuArea');
             const u = getUsuarioLogado();
 
             if (!u) {
-                nav.innerHTML = `
-                        <a href="login.html" class="btn btn-login">Entrar</a>
-                        <a href="cadastro.html" class="btn btn-cadastro">Criar Conta</a>
-                    `;
+                area.innerHTML = `
+                    <a href="login.html">Entrar</a>
+                    <a class="btn-primary" href="cadastro.html">Criar Conta</a>
+                `;
                 return;
             }
 
-            nav.innerHTML = `
-                    <div class="userbox">
-                        <button class="userbtn" id="userBtn">
-                            Olá, ${u.nome}${u.isAdmin ? `<span class="badge">admin</span>` : ''} ▾
-                        </button>
-                        <div class="dropdown" id="dd">
-                            <a href="#minha-lista">📚 Minha Lista <span>›</span></a>
-                            <a href="#" id="perfilBtn">👤 Perfil (em breve) <span>›</span></a>
-                            <button id="logoutBtn">🚪 Sair <span>›</span></button>
-                        </div>
+            area.innerHTML = `
+                <div class="userbox">
+                    <button class="userbtn" id="userBtn">
+                        Olá, ${u.nome}
+                        ${u.isAdmin ? `<span class="badge-admin">admin</span>` : ``}
+                        <span style="opacity:.8; margin-left:8px;">▾</span>
+                    </button>
+
+                    <div class="dropdown" id="userDropdown">
+                        <a href="minha-lista.html">📚 Minha Lista <span>›</span></a>
+                        <a href="#" id="perfilBtn">👤 Perfil (em breve) <span>›</span></a>
+
+                        ${u.isAdmin ? `
+                            <div class="sep"></div>
+                            <a href="admin.html">🛠️ Admin (Catálogo) <span>›</span></a>
+                        ` : ``}
+
+                        <div class="sep"></div>
+                        <button id="logoutBtn">🚪 Sair <span>›</span></button>
                     </div>
-                `;
+                </div>
+            `;
 
             const btn = document.getElementById('userBtn');
-            const dd = document.getElementById('dd');
-            const perfilBtn = document.getElementById('perfilBtn');
-            const logoutBtn = document.getElementById('logoutBtn');
+            const dd = document.getElementById('userDropdown');
 
-            btn.addEventListener('click', () => {
-                dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
-            });
-
-            perfilBtn.addEventListener('click', (e) => {
+            btn.addEventListener('click', (e) => {
                 e.preventDefault();
-                alert('Perfil (em breve). Na fase 1 vamos manter simples 🙂');
+                dd.style.display = (dd.style.display === 'block') ? 'none' : 'block';
             });
 
-            logoutBtn.addEventListener('click', () => logout());
+            document.getElementById('logoutBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                logout();
+            });
+
+            document.getElementById('perfilBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                alert('Perfil (em breve). Vamos fazer depois 🙂');
+            });
 
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.userbox')) dd.style.display = 'none';
             });
         }
 
-        // ======= fetch que SEMPRE manda X-User-Id se estiver logado =======
-        async function apiFetch(url, options = {}) {
-            const u = getUsuarioLogado();
-            const headers = options.headers ? { ...options.headers } : {};
+        // ======= Tabelas da direita (por enquanto FIXAS / mock) =======
+        function renderTopsFixos() {
+            const lancamentos = [
+                { titulo: "Frieren (Edição BR)", info: "Chegando às bancas", badge: "Novo" },
+                { titulo: "Kagurabachi (BR)", info: "Pré-venda", badge: "Pré" },
+                { titulo: "Dandadan (Vol. novo)", info: "Lançamento do mês", badge: "Novo" },
+                { titulo: "Jujutsu Kaisen (Vol. novo)", info: "Reimpressão", badge: "BR" },
+                { titulo: "Chainsaw Man (Vol. novo)", info: "Lançamento do mês", badge: "Novo" },
+            ];
 
-            if (u?.id) headers['X-User-Id'] = u.id;
+            const maisLidos = [
+                { titulo: "One Piece", info: "+1.245 leitores", badge: "↑" },
+                { titulo: "Jujutsu Kaisen", info: "+980 leitores", badge: "↑" },
+                { titulo: "Chainsaw Man", info: "+870 leitores", badge: "↑" },
+                { titulo: "Demon Slayer", info: "+755 leitores", badge: "↑" },
+                { titulo: "Naruto", info: "+600 leitores", badge: "↑" },
+            ];
 
-            return fetch(url, { ...options, headers });
-        }
+            const topLanc = document.getElementById('topLancamentos');
+            const topLidos = document.getElementById('topMaisLidos');
 
-        // ======= Carregar catálogo =======
-        async function carregarCatalogo() {
-            try {
-                const res = await apiFetch('/api/catalogo');
-                const dados = await res.json();
-
-                const container = document.getElementById('manga-list');
-                container.innerHTML = (dados || []).map(m => `
-                        <div style="background: #2d2d2d; padding: 15px; border-radius: 10px;">
-                            <strong>${m.titulo}</strong><br>
-                            <small>Capítulos: ${m.totalCapitulos ?? '?'}</small>
+            topLanc.innerHTML = lancamentos.map((m, i) => `
+                <div class="row">
+                    <div class="row-left">
+                        <span class="rank">${i + 1}</span>
+                        <div style="min-width:0;">
+                            <div class="name">${m.titulo}</div>
+                            <div class="meta">${m.info}</div>
                         </div>
-                    `).join('');
-            } catch (e) {
-                console.error("Erro ao carregar catálogo:", e);
-            }
+                    </div>
+                    <div class="right">${m.badge}</div>
+                </div>
+            `).join('');
+
+            topLidos.innerHTML = maisLidos.map((m, i) => `
+                <div class="row">
+                    <div class="row-left">
+                        <span class="rank">${i + 1}</span>
+                        <div style="min-width:0;">
+                            <div class="name">${m.titulo}</div>
+                            <div class="meta">${m.info}</div>
+                        </div>
+                    </div>
+                    <div class="right">${m.badge}</div>
+                </div>
+            `).join('');
         }
 
         // Inicializa
-        renderNav();
-        carregarCatalogo();
+        renderMenuTopo();
+        renderTopsFixos();
     </script>
 </body>
 </html>

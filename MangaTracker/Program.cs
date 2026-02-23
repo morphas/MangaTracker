@@ -2,9 +2,7 @@
 using System.Linq;
 using MangaTracker.Models;
 using MangaTracker.Services;
-using System.Collections.Generic;
 using static MangaTracker.ConsoleHelpers;
-using static MangaTracker.ConsoleUI;
 
 namespace MangaTracker
 {
@@ -32,7 +30,6 @@ namespace MangaTracker
             {
                 Console.Clear();
 
-                // CORREÇÃO: Mudamos de ObterUsuarioAtual para ObterUsuarioLogado
                 var user = service.ObterUsuarioLogado();
                 string nomeUser = user is null ? "(nenhum)" : user.Nome;
 
@@ -91,7 +88,6 @@ namespace MangaTracker
                 Console.Clear();
                 Console.WriteLine("=== Usuários ===");
 
-                // CORREÇÃO: Mudamos para ObterUsuarioLogado
                 var atual = service.ObterUsuarioLogado();
                 Console.WriteLine($"Usuário atual: {(atual is null ? "(nenhum)" : atual.Nome)}");
                 Console.WriteLine();
@@ -189,8 +185,7 @@ namespace MangaTracker
                 Console.Clear();
                 Console.WriteLine("=== Catálogo de Mangás ===");
                 Console.WriteLine("1 - Cadastrar novo mangá");
-                Console.WriteLine("2 - Editar mangá existente");
-                Console.WriteLine("3 - Listar catálogo");
+                Console.WriteLine("2 - Listar catálogo");
                 Console.WriteLine("0 - Voltar");
                 Console.WriteLine();
                 Console.Write("Escolha: ");
@@ -202,12 +197,6 @@ namespace MangaTracker
                         TelaCadastrarNoCatalogo(service);
                         break;
                     case "2":
-                        if (service.ListarCatalogo().Count == 0)
-                            Pausa("Nenhum mangá cadastrado para editar.");
-                        else
-                            TelaEditarMangaDoCatalogo(service);
-                        break;
-                    case "3":
                         TelaListarCatalogo(service);
                         break;
                     case "0":
@@ -219,12 +208,10 @@ namespace MangaTracker
             }
         }
 
+        // ✅ AQUI está o ajuste principal do seu erro
         static void TelaCadastrarNoCatalogo(IBibliotecaService service)
         {
-            // Nota: Na API, este método agora exige que o usuário seja Admin.
-            // No Console, como você é o Rafael, ele funcionará se o Rafael estiver ativo.
             string? tituloDigitado = null;
-            int? total = null;
 
             while (true)
             {
@@ -235,9 +222,6 @@ namespace MangaTracker
 
                 if (!string.IsNullOrWhiteSpace(tituloDigitado))
                     Console.WriteLine($"Título: {tituloDigitado}");
-
-                if (total.HasValue)
-                    Console.WriteLine($"Total de capítulos: {total.Value}");
 
                 if (string.IsNullOrWhiteSpace(tituloDigitado))
                 {
@@ -250,11 +234,25 @@ namespace MangaTracker
                     continue;
                 }
 
-                total = LerIntOpcional("Total de capítulos (Enter para pular): ");
+                // ✅ NOVO: pergunta se é lançado no Brasil e a editora
+                bool lancadoNoBrasil = LerConfirmacao("Lançado no Brasil? (s/n): ");
+
+                string? editora = null;
+                if (lancadoNoBrasil)
+                {
+                    editora = LerTexto("Editora: ");
+                    if (string.IsNullOrWhiteSpace(editora))
+                    {
+                        PausaErro("Editora obrigatória quando é lançado no Brasil.");
+                        continue;
+                    }
+                    editora = editora.Trim();
+                }
 
                 try
                 {
-                    service.CadastrarNoCatalogo(tituloDigitado, total);
+                    // ✅ CHAMADA CERTA (3 parâmetros)
+                    service.CadastrarNoCatalogo(tituloDigitado, lancadoNoBrasil, editora);
                     Pausa("Mangá cadastrado!");
                     return;
                 }
@@ -270,16 +268,25 @@ namespace MangaTracker
         {
             Console.Clear();
             Console.WriteLine("=== Catálogo ===");
-            var lista = service.ListarCatalogo().OrderBy(m => m.Titulo).ToList();
-            if (lista.Count == 0) { Pausa("Vazio."); return; }
-            foreach (var m in lista) Console.WriteLine($"- {m.Titulo} ({m.TotalCapitulos ?? 0} caps)");
-            Pausa("Voltar");
-        }
 
-        static void TelaEditarMangaDoCatalogo(IBibliotecaService service)
-        {
-            // Método simplificado para evitar erros de compilação
-            Pausa("A edição deve ser feita via API/Swagger para maior segurança.");
+            var lista = service.ListarCatalogo()
+                .OrderBy(m => m.Titulo, StringComparer.CurrentCultureIgnoreCase)
+                .ToList();
+
+            if (lista.Count == 0)
+            {
+                Pausa("Vazio.");
+                return;
+            }
+
+            foreach (var m in lista)
+            {
+                // Se você ainda não colocou os campos novos no Model Manga, remova essas linhas
+                // e deixe só: Console.WriteLine($"- {m.Titulo}");
+                Console.WriteLine($"- {m.Titulo}");
+            }
+
+            Pausa("Voltar");
         }
 
         static void TelaAdicionarNaMinhaLeitura(IBibliotecaService service)
@@ -299,7 +306,6 @@ namespace MangaTracker
         {
             var lista = service.ListarMinhaLista();
             if (lista.Count == 0) { Pausa("Lista vazia."); return; }
-            // Lógica simplificada
             Pausa("Use a API para atualizar o progresso com segurança.");
         }
 
@@ -309,6 +315,37 @@ namespace MangaTracker
             Console.Clear();
             foreach (var item in lista) Console.WriteLine($"- {item.Manga.Titulo}: {item.Leitura.CapituloAtual}");
             Pausa("Voltar");
+        }
+
+        // =========================
+        // Helpers simples (no Console)
+        // =========================
+
+        static bool LerConfirmacao(string msg)
+        {
+            while (true)
+            {
+                Console.Write(msg);
+                var s = Console.ReadLine()?.Trim().ToLower();
+
+                if (s == "s" || s == "sim") return true;
+                if (s == "n" || s == "nao" || s == "não") return false;
+
+                PausaErro("Responda com 's' ou 'n'.");
+            }
+        }
+
+        static string LerTexto(string msg)
+        {
+            while (true)
+            {
+                Console.Write(msg);
+                var s = Console.ReadLine();
+                if (!string.IsNullOrWhiteSpace(s))
+                    return s.Trim();
+
+                PausaErro("Texto obrigatório.");
+            }
         }
     }
 }

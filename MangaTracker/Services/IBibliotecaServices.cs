@@ -13,7 +13,7 @@ namespace MangaTracker.Services
         Manga? BuscarMangaPorId(Guid id);
         Manga? BuscarMangaPorTitulo(string titulo);
         bool MangaExisteNoCatalogo(string titulo);
-        Manga CadastrarNoCatalogo(string titulo, int? totalCapitulos = null);
+        Manga CadastrarNoCatalogo(string titulo, bool lancadoNoBrasil, string? editora);
         void DefinirTotalCapitulos(Guid mangaId, int? totalCapitulos);
 
         // =========================

@@ -55,25 +55,35 @@ namespace MangaTracker.Services
         public bool MangaExisteNoCatalogo(string titulo)
             => BuscarMangaPorTitulo(titulo) is not null;
 
-        public Manga CadastrarNoCatalogo(string titulo, int? totalCapitulos = null)
+        public Manga CadastrarNoCatalogo(string titulo, bool lancadoNoBrasil, string? editora)
         {
-            lock (_lock)
+            if (string.IsNullOrWhiteSpace(titulo))
+                throw new Exception("Título é obrigatório.");
+
+            var t = titulo.Trim();
+
+            // Se for lançado no Brasil, editora vira obrigatória
+            if (lancadoNoBrasil && string.IsNullOrWhiteSpace(editora))
+                throw new Exception("Editora é obrigatória quando o mangá é lançado no Brasil.");
+
+            // Se NÃO for lançado, editora tem que ficar nula (limpa)
+            if (!lancadoNoBrasil)
+                editora = null;
+
+            // Verifica se já existe (por título)
+            if (_catalogo.Any(m => m.Titulo.Equals(t, StringComparison.CurrentCultureIgnoreCase)))
+                throw new Exception("Esse mangá já existe no catálogo.");
+
+            var manga = new Manga
             {
-                string t = titulo.Trim();
+                Titulo = t,
+                LancadoNoBrasil = lancadoNoBrasil,
+                Editora = editora
+            };
 
-                if (MangaExisteNoCatalogo(t))
-                    throw new InvalidOperationException("Esse mangá já existe no catálogo.");
-
-                var manga = new Manga
-                {
-                    Titulo = t,
-                    TotalCapitulos = totalCapitulos
-                };
-
-                _catalogo.Add(manga);
-                AutoSalvar();
-                return manga;
-            }
+            _catalogo.Add(manga);
+            SalvarDados();
+            return manga;
         }
 
         public void DefinirTotalCapitulos(Guid mangaId, int? totalCapitulos)

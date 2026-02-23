@@ -1,0 +1,563 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MangaTracker Brasil - Home</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #121212;
+            color: white;
+            margin: 0;
+        }
+
+        /* ======= NAVBAR ======= */
+        .navbar {
+            background: #000;
+            padding: 15px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid #e21;
+        }
+
+        .logo {
+            font-size: 1.5em;
+            font-weight: bold;
+            text-decoration: none;
+            color: white;
+        }
+
+            .logo span {
+                color: #e21;
+            }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            display: inline-block;
+        }
+
+        .btn-login {
+            background: transparent;
+            color: white;
+            border: 1px solid white;
+        }
+
+        .btn-cadastro {
+            background: #e21;
+            color: white;
+        }
+
+        .btn-login:hover {
+            background: white;
+            color: black;
+        }
+
+        /* ======= LAYOUT MAL-LIKE ======= */
+        .page {
+            max-width: 1100px; /* mais “MAL” (compacto central) */
+            margin: 0 auto;
+            padding: 18px 16px 60px;
+        }
+
+        .top-ad {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            margin: 18px 0 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 18px;
+            align-items: start;
+        }
+
+        .card {
+            background: #1e1e1e;
+            border: 1px solid #2a2a2a;
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,.35);
+        }
+
+        .muted {
+            color: #aaa;
+        }
+
+        .hero {
+            padding: 22px;
+            border-radius: 16px;
+            background: linear-gradient(180deg, rgba(226,34,17,.18), rgba(30,30,30,1));
+            border: 1px solid rgba(226,34,17,.25);
+        }
+
+            .hero h1 {
+                margin: 0 0 10px;
+                font-size: 1.8em;
+                letter-spacing: .2px;
+            }
+
+            .hero p {
+                margin: 0;
+                line-height: 1.5;
+            }
+
+        .hero-actions {
+            margin-top: 18px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: #e21;
+            color: white;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-weight: 800;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: #ddd;
+            border: 1px solid #333;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary:hover {
+            background: #ff3333;
+        }
+
+        .btn-ghost:hover {
+            background: #1f1f1f;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 0 0 12px;
+        }
+
+            .section-title h2, .section-title h3 {
+                margin: 0;
+                font-size: 1.1em;
+            }
+
+        .chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .chip {
+            font-size: .85em;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid #333;
+            background: #151515;
+            color: #ddd;
+        }
+
+        /* Destaques */
+        .highlights {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .highlight {
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 12px;
+            min-height: 74px;
+        }
+
+            .highlight strong {
+                display: block;
+                margin-bottom: 6px;
+            }
+
+            .highlight small {
+                color: #aaa;
+            }
+
+        /* Sidebar list */
+        .rank-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .rank-item {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            padding: 10px;
+            border-radius: 12px;
+            background: #141414;
+            border: 1px solid #2a2a2a;
+        }
+
+        .rank-num {
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            color: #e21;
+            border: 1px solid rgba(226,34,17,.35);
+            background: rgba(226,34,17,.08);
+            flex: 0 0 auto;
+        }
+
+        .rank-info strong {
+            display: block;
+        }
+
+        .rank-info small {
+            color: #aaa;
+        }
+
+        .side-ad {
+            margin-top: 14px;
+            height: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+        }
+
+        /* ======= MENU DO USUÁRIO (igual o seu) ======= */
+        .userbox {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .userbtn {
+            background: transparent;
+            color: white;
+            border: 1px solid #333;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+            .userbtn:hover {
+                background: #1e1e1e;
+            }
+
+        .badge {
+            font-size: .75em;
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid #e21;
+            color: #e21;
+            margin-left: 6px;
+        }
+
+        .dropdown {
+            position: absolute;
+            right: 0;
+            top: 44px;
+            background: #111;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            width: 240px;
+            padding: 8px;
+            display: none;
+            box-shadow: 0 10px 25px rgba(0,0,0,.5);
+            z-index: 999;
+        }
+
+            .dropdown a, .dropdown button {
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px 10px;
+                border-radius: 10px;
+                text-decoration: none;
+                background: transparent;
+                border: none;
+                color: #ddd;
+                cursor: pointer;
+                font-size: 0.95em;
+                box-sizing: border-box;
+            }
+
+                .dropdown a:hover, .dropdown button:hover {
+                    background: #1f1f1f;
+                }
+
+        /* responsivo */
+        @media (max-width: 900px) {
+            .navbar {
+                padding: 15px 18px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .highlights {
+                grid-template-columns: 1fr;
+            }
+
+            .side-ad {
+                height: 240px;
+            }
+
+            .top-ad {
+                height: 90px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="index.html" class="logo">MANGA<span>TRACKER</span></a>
+
+        <!-- Aqui o JS vai renderizar: (Entrar/Criar Conta) OU (Usuário + menu) -->
+        <div class="nav-buttons" id="navArea">
+            <a href="login.html" class="btn btn-login">Entrar</a>
+            <a href="cadastro.html" class="btn btn-cadastro">Criar Conta</a>
+        </div>
+    </nav>
+
+    <div class="page">
+
+        <!-- Ad principal (placeholder) -->
+        <div class="top-ad">Espaço para anúncio (728x90)</div>
+
+        <div class="grid">
+            <!-- COLUNA ESQUERDA -->
+            <div>
+
+                <div class="card hero">
+                    <h1>Bem-vindo ao MangaTracker Brasil 🇧🇷</h1>
+                    <p class="muted">
+                        Um catálogo focado nos mangás lançados no Brasil — e o seu espaço para organizar leituras,
+                        acompanhar capítulos e descobrir o que a galera está lendo.
+                    </p>
+
+                    <div class="chips">
+                        <span class="chip">📚 Catálogo BR</span>
+                        <span class="chip">✅ Minha Lista</span>
+                        <span class="chip">📈 Progresso por capítulo</span>
+                        <span class="chip">🔥 Top do mês</span>
+                    </div>
+
+                    <div class="hero-actions" id="heroActions">
+                        <a class="btn-primary" href="cadastro.html">Começar agora gratuitamente</a>
+                        <a class="btn-ghost" href="login.html">Já tenho conta</a>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 16px;">
+                    <div class="section-title">
+                        <h2>Destaques do mês</h2>
+                        <span class="muted" style="font-size:.9em;">(em breve automático)</span>
+                    </div>
+
+                    <div class="highlights">
+                        <div class="highlight">
+                            <strong>Novidade Panini</strong>
+                            <small>Ex.: Chainsaw Man Vol. 14</small>
+                        </div>
+                        <div class="highlight">
+                            <strong>Lançamento JBC</strong>
+                            <small>Ex.: Blue Lock Vol. 8</small>
+                        </div>
+                        <div class="highlight">
+                            <strong>Edição especial</strong>
+                            <small>Ex.: Berserk Deluxe</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 16px;">
+                    <div class="section-title">
+                        <h2>Espaço para anúncio</h2>
+                        <span class="muted" style="font-size:.9em;">(300x250)</span>
+                    </div>
+                    <div style="background:#141414; border:1px solid #2a2a2a; border-radius:12px; height: 250px; display:flex; align-items:center; justify-content:center; color:#666;">
+                        Anúncio 300x250
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- COLUNA DIREITA -->
+            <div>
+                <div class="card">
+                    <div class="section-title">
+                        <h3>🔥 Top mangás do mês</h3>
+                        <span class="muted" style="font-size:.85em;">Brasil</span>
+                    </div>
+
+                    <div class="rank-list" id="topList">
+                        <!-- mock (depois liga na API) -->
+                        <div class="rank-item">
+                            <div class="rank-num">1</div>
+                            <div class="rank-info">
+                                <strong>One Piece</strong>
+                                <small>1.284 usuários lendo</small>
+                            </div>
+                        </div>
+                        <div class="rank-item">
+                            <div class="rank-num">2</div>
+                            <div class="rank-info">
+                                <strong>Jujutsu Kaisen</strong>
+                                <small>987 usuários lendo</small>
+                            </div>
+                        </div>
+                        <div class="rank-item">
+                            <div class="rank-num">3</div>
+                            <div class="rank-info">
+                                <strong>Chainsaw Man</strong>
+                                <small>843 usuários lendo</small>
+                            </div>
+                        </div>
+                        <div class="rank-item">
+                            <div class="rank-num">4</div>
+                            <div class="rank-info">
+                                <strong>Blue Lock</strong>
+                                <small>612 usuários lendo</small>
+                            </div>
+                        </div>
+                        <div class="rank-item">
+                            <div class="rank-num">5</div>
+                            <div class="rank-info">
+                                <strong>Berserk</strong>
+                                <small>580 usuários lendo</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="side-ad">Espaço para anúncio (300x600)</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ======= Usuário logado (Fase 1: localStorage) =======
+        function getUsuarioLogado() {
+            try { return JSON.parse(localStorage.getItem('usuarioLogado')); }
+            catch {
+                localStorage.removeItem('usuarioLogado');
+                return null;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('usuarioLogado');
+            window.location.reload();
+        }
+
+        // ======= Render do topo (Entrar/Cadastrar OU menu do usuário) =======
+        function renderNav() {
+            const nav = document.getElementById('navArea');
+            const u = getUsuarioLogado();
+
+            if (!u) {
+                nav.innerHTML = `
+              <a href="login.html" class="btn btn-login">Entrar</a>
+              <a href="cadastro.html" class="btn btn-cadastro">Criar Conta</a>
+            `;
+                return;
+            }
+
+            nav.innerHTML = `
+            <div class="userbox">
+              <button class="userbtn" id="userBtn">
+                Olá, ${u.nome}${u.isAdmin ? `<span class="badge">admin</span>` : ''} ▾
+              </button>
+              <div class="dropdown" id="dd">
+                <a href="minha-lista.html">📚 Minha Lista <span>›</span></a>
+                ${u.isAdmin ? `<a href="admin.html">➕ Cadastrar mangá <span>›</span></a>` : ``}
+                <button id="logoutBtn">🚪 Sair <span>›</span></button>
+              </div>
+            </div>
+          `;
+
+            const btn = document.getElementById('userBtn');
+            const dd = document.getElementById('dd');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            btn.addEventListener('click', () => {
+                dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+            });
+
+            logoutBtn.addEventListener('click', () => logout());
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.userbox')) dd.style.display = 'none';
+            });
+        }
+
+        // CTA muda quando logado (home continua fixa)
+        function renderHeroActions() {
+            const wrap = document.getElementById('heroActions');
+            const u = getUsuarioLogado();
+
+            if (!u) {
+                wrap.innerHTML = `
+              <a class="btn-primary" href="cadastro.html">Começar agora gratuitamente</a>
+              <a class="btn-ghost" href="login.html">Já tenho conta</a>
+            `;
+            } else {
+                wrap.innerHTML = `
+              <a class="btn-primary" href="minha-lista.html">Ir para Minha Lista</a>
+              ${u.isAdmin ? `<a class="btn-ghost" href="admin.html">Cadastrar mangá (admin)</a>` : `<a class="btn-ghost" href="minha-lista.html">Atualizar progresso</a>`}
+            `;
+            }
+        }
+
+        renderNav();
+        renderHeroActions();
+    </script>
+</body>
+</html>
