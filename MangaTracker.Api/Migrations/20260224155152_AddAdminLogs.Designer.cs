@@ -3,6 +3,7 @@ using System;
 using MangaTracker.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MangaTracker.Api.Migrations
 {
     [DbContext(typeof(MangaTrackerDbContext))]
-    partial class MangaTrackerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260224155152_AddAdminLogs")]
+    partial class AddAdminLogs
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

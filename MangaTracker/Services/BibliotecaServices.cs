@@ -18,17 +18,16 @@ namespace MangaTracker.Services
 
         public BibliotecaService()
         {
-            // Agora ele busca o dados.json na mesma pasta onde seu código está aberto
+            // Busca o dados.json na mesma pasta onde a aplicação está rodando
             string arquivo = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "dados.json");
             _storage = new JsonStorage(arquivo);
         }
 
-        private void AutoSalvar()
-        {
-            SalvarDados();
-        }
+        private void AutoSalvar() => SalvarDados();
 
-        // Método que o seu Controller usa para checar se você é Admin
+        // =========================
+        // LOGIN / USUÁRIO ATUAL
+        // =========================
         public Usuario? ObterUsuarioLogado()
         {
             lock (_lock)
@@ -37,19 +36,59 @@ namespace MangaTracker.Services
             }
         }
 
+        public IReadOnlyList<Usuario> ListarUsuarios()
+        {
+            lock (_lock)
+            {
+                return _usuarios.ToList();
+            }
+        }
+
+        public Usuario? BuscarUsuarioPorId(Guid id)
+        {
+            lock (_lock)
+            {
+                return _usuarios.FirstOrDefault(u => u.Id == id);
+            }
+        }
+
+        public bool DefinirUsuarioAtual(Guid usuarioId)
+        {
+            lock (_lock)
+            {
+                if (_usuarios.All(u => u.Id != usuarioId)) return false;
+                _usuarioAtualId = usuarioId;
+                AutoSalvar();
+                return true;
+            }
+        }
+
         // =========================
         // CATÁLOGO
         // =========================
         public IReadOnlyList<Manga> ListarCatalogo()
-            => _catalogo;
+        {
+            lock (_lock)
+            {
+                return _catalogo.ToList(); // evita alguém mexer no _catalogo fora
+            }
+        }
 
         public Manga? BuscarMangaPorId(Guid id)
-            => _catalogo.FirstOrDefault(m => m.Id == id);
+        {
+            lock (_lock)
+            {
+                return _catalogo.FirstOrDefault(m => m.Id == id);
+            }
+        }
 
         public Manga? BuscarMangaPorTitulo(string titulo)
         {
-            string t = NormalizarTitulo(titulo);
-            return _catalogo.FirstOrDefault(m => NormalizarTitulo(m.Titulo) == t);
+            lock (_lock)
+            {
+                string t = NormalizarTitulo(titulo);
+                return _catalogo.FirstOrDefault(m => NormalizarTitulo(m.Titulo) == t);
+            }
         }
 
         public bool MangaExisteNoCatalogo(string titulo)
@@ -57,120 +96,222 @@ namespace MangaTracker.Services
 
         public Manga CadastrarNoCatalogo(string titulo, bool lancadoNoBrasil, string? editora)
         {
-            if (string.IsNullOrWhiteSpace(titulo))
-                throw new Exception("Título é obrigatório.");
-
-            var t = titulo.Trim();
-
-            // Se for lançado no Brasil, editora vira obrigatória
-            if (lancadoNoBrasil && string.IsNullOrWhiteSpace(editora))
-                throw new Exception("Editora é obrigatória quando o mangá é lançado no Brasil.");
-
-            // Se NÃO for lançado, editora tem que ficar nula (limpa)
-            if (!lancadoNoBrasil)
-                editora = null;
-
-            // Verifica se já existe (por título)
-            if (_catalogo.Any(m => m.Titulo.Equals(t, StringComparison.CurrentCultureIgnoreCase)))
-                throw new Exception("Esse mangá já existe no catálogo.");
-
-            var manga = new Manga
+            lock (_lock)
             {
-                Titulo = t,
-                LancadoNoBrasil = lancadoNoBrasil,
-                Editora = editora
-            };
+                if (string.IsNullOrWhiteSpace(titulo))
+                    throw new Exception("Título é obrigatório.");
 
-            _catalogo.Add(manga);
-            SalvarDados();
-            return manga;
+                var t = titulo.Trim();
+
+                // Se for lançado no Brasil, editora vira obrigatória
+                if (lancadoNoBrasil && string.IsNullOrWhiteSpace(editora))
+                    throw new Exception("Editora é obrigatória quando o mangá é lançado no Brasil.");
+
+                // Se NÃO for lançado, editora tem que ficar nula (limpa)
+                if (!lancadoNoBrasil)
+                    editora = null;
+
+                // Verifica se já existe (por título)
+                if (_catalogo.Any(m => m.Titulo.Equals(t, StringComparison.CurrentCultureIgnoreCase)))
+                    throw new Exception("Esse mangá já existe no catálogo.");
+
+                var manga = new Manga
+                {
+                    Titulo = t,
+                    LancadoNoBrasil = lancadoNoBrasil,
+                    Editora = editora?.Trim(),
+                    EditoraKey = NormalizeEditoraKey(editora)
+                };
+
+                _catalogo.Add(manga);
+                AutoSalvar();
+                return manga;
+            }
+        }
+
+        public Manga AtualizarMangaDoCatalogo(Guid id, string titulo, bool lancadoNoBrasil, string? editora)
+        {
+            lock (_lock)
+            {
+                if (id == Guid.Empty)
+                    throw new Exception("ID inválido.");
+
+                if (string.IsNullOrWhiteSpace(titulo))
+                    throw new Exception("Título é obrigatório.");
+
+                if (lancadoNoBrasil && string.IsNullOrWhiteSpace(editora))
+                    throw new Exception("Informe a editora se o mangá for lançado no Brasil.");
+
+                var manga = _catalogo.FirstOrDefault(m => m.Id == id);
+                if (manga is null)
+                    throw new Exception("Mangá não encontrado.");
+
+                manga.Titulo = titulo.Trim();
+                manga.LancadoNoBrasil = lancadoNoBrasil;
+
+                if (lancadoNoBrasil)
+                {
+                    manga.Editora = editora?.Trim();
+                    manga.EditoraKey = NormalizeEditoraKey(manga.Editora);
+                }
+                else
+                {
+                    manga.Editora = null;
+                    manga.EditoraKey = null;
+                }
+
+                AutoSalvar();
+                return manga;
+            }
+        }
+
+        public void RemoverMangaDoCatalogo(Guid id)
+        {
+            lock (_lock)
+            {
+                if (id == Guid.Empty)
+                    throw new Exception("ID inválido.");
+
+                var manga = _catalogo.FirstOrDefault(m => m.Id == id);
+                if (manga is null)
+                    throw new Exception("Mangá não encontrado.");
+
+                // Remove do catálogo
+                _catalogo.Remove(manga);
+
+                // Remove também das leituras (pra não deixar lixo na lista dos usuários)
+                _minhaLista.RemoveAll(l => l.MangaId == id);
+
+                AutoSalvar();
+            }
         }
 
         public void DefinirTotalCapitulos(Guid mangaId, int? totalCapitulos)
         {
-            Manga? manga = BuscarMangaPorId(mangaId);
-            if (manga is null) return;
+            lock (_lock)
+            {
+                var manga = _catalogo.FirstOrDefault(m => m.Id == mangaId);
+                if (manga is null) return;
 
-            if (totalCapitulos.HasValue && totalCapitulos.Value < 1)
-                throw new InvalidOperationException("Total de capítulos deve ser >= 1.");
+                if (totalCapitulos.HasValue && totalCapitulos.Value < 1)
+                    throw new InvalidOperationException("Total de capítulos deve ser >= 1.");
 
-            manga.TotalCapitulos = totalCapitulos;
-            AutoSalvar();
+                manga.TotalCapitulos = totalCapitulos;
+                AutoSalvar();
+            }
         }
 
         // =========================
         // MINHA LISTA (LEITURA)
         // =========================
-
         public IReadOnlyList<(Manga Manga, Leitura Leitura)> ListarMinhaLista()
         {
-            return LeiturasDoUsuarioAtual()
-                .Select(l =>
-                {
-                    var manga = BuscarMangaPorId(l.MangaId);
-                    return (manga, l);
-                })
-                .Where(x => x.manga is not null)
-                .Select(x => (x.manga!, x.l))
-                .ToList();
+            lock (_lock)
+            {
+                return LeiturasDoUsuarioAtual()
+                    .Select(l =>
+                    {
+                        var manga = _catalogo.FirstOrDefault(m => m.Id == l.MangaId);
+                        return (manga, l);
+                    })
+                    .Where(x => x.manga is not null)
+                    .Select(x => (x.manga!, x.l))
+                    .ToList();
+            }
         }
 
         public void AdicionarNaMinhaLista(Guid mangaId, StatusLeitura status, int? capituloAtual = null)
         {
-            if (BuscarMangaPorId(mangaId) is null)
-                throw new InvalidOperationException("Mangá não encontrado no catálogo.");
-
-            if (EstaNaMinhaLista(mangaId))
-                throw new InvalidOperationException("Esse mangá já está na sua lista de leitura.");
-
-            var leitura = new Leitura
+            lock (_lock)
             {
-                UsuarioId = _usuarioAtualId,
-                MangaId = mangaId,
-                Status = status
-            };
+                if (_usuarioAtualId == Guid.Empty)
+                    throw new Exception("Faça login primeiro.");
 
-            if (status == StatusLeitura.PretendoLer)
-            {
-                leitura.CapituloAtual = 0;
-                leitura.UltimaLeituraEm = null;
+                if (_catalogo.All(m => m.Id != mangaId))
+                    throw new InvalidOperationException("Mangá não encontrado no catálogo.");
+
+                if (EstaNaMinhaLista(mangaId))
+                    throw new InvalidOperationException("Esse mangá já está na sua lista de leitura.");
+
+                var leitura = new Leitura
+                {
+                    UsuarioId = _usuarioAtualId,
+                    MangaId = mangaId,
+                    Status = status
+                };
+
+                if (status == StatusLeitura.PretendoLer)
+                {
+                    leitura.CapituloAtual = 0;
+                    leitura.UltimaLeituraEm = null;
+                }
+                else
+                {
+                    leitura.CapituloAtual = capituloAtual ?? 0;
+                    leitura.UltimaLeituraEm = DateTime.Now;
+                }
+
+                var manga = _catalogo.FirstOrDefault(m => m.Id == mangaId);
+                if (status == StatusLeitura.Concluido && manga?.TotalCapitulos is not null)
+                    leitura.CapituloAtual = manga.TotalCapitulos.Value;
+
+                _minhaLista.Add(leitura);
+                AutoSalvar();
             }
-            else
+        }
+
+        public void RemoverDaMinhaLista(Guid mangaId)
+        {
+            lock (_lock)
             {
-                leitura.CapituloAtual = capituloAtual ?? 0;
-                leitura.UltimaLeituraEm = DateTime.Now;
+                if (_usuarioAtualId == Guid.Empty)
+                    throw new Exception("Faça login primeiro.");
+
+                var leitura = _minhaLista.FirstOrDefault(l =>
+                    l.UsuarioId == _usuarioAtualId && l.MangaId == mangaId);
+
+                if (leitura == null)
+                    throw new Exception("Esse mangá não está na sua lista.");
+
+                _minhaLista.Remove(leitura);
+                AutoSalvar(); // ✅ faltava
             }
-
-            var manga = BuscarMangaPorId(mangaId);
-            if (status == StatusLeitura.Concluido && manga?.TotalCapitulos is not null)
-                leitura.CapituloAtual = manga.TotalCapitulos.Value;
-
-            _minhaLista.Add(leitura);
-            AutoSalvar();
         }
 
         public void AtualizarLeitura(Guid mangaId, int capituloAtual, StatusLeitura? status = null)
         {
-            var leitura = LeiturasDoUsuarioAtual().FirstOrDefault(l => l.MangaId == mangaId);
-            if (leitura is null) return;
-
-            leitura.CapituloAtual = capituloAtual < 0 ? 0 : capituloAtual;
-            leitura.UltimaLeituraEm = DateTime.Now;
-
-            if (status.HasValue)
-                leitura.Status = status.Value;
-
-            var manga = BuscarMangaPorId(mangaId);
-            if (manga?.TotalCapitulos is not null && leitura.CapituloAtual >= manga.TotalCapitulos.Value)
+            lock (_lock)
             {
-                leitura.Status = StatusLeitura.Concluido;
-                leitura.CapituloAtual = manga.TotalCapitulos.Value;
+                var leitura = LeiturasDoUsuarioAtual().FirstOrDefault(l => l.MangaId == mangaId);
+                if (leitura is null) return;
+
+                leitura.CapituloAtual = capituloAtual < 0 ? 0 : capituloAtual;
+                leitura.UltimaLeituraEm = DateTime.Now;
+
+                if (status.HasValue)
+                    leitura.Status = status.Value;
+
+                var manga = _catalogo.FirstOrDefault(m => m.Id == mangaId);
+                if (manga?.TotalCapitulos is not null && leitura.CapituloAtual >= manga.TotalCapitulos.Value)
+                {
+                    leitura.Status = StatusLeitura.Concluido;
+                    leitura.CapituloAtual = manga.TotalCapitulos.Value;
+                }
+
+                AutoSalvar();
             }
-            AutoSalvar();
         }
 
         public bool EstaNaMinhaLista(Guid mangaId)
-            => LeiturasDoUsuarioAtual().Any(l => l.MangaId == mangaId);
+        {
+            lock (_lock)
+            {
+                return LeiturasDoUsuarioAtual().Any(l => l.MangaId == mangaId);
+            }
+        }
+
+        private IEnumerable<Leitura> LeiturasDoUsuarioAtual()
+            => _minhaLista.Where(l => l.UsuarioId == _usuarioAtualId);
 
         // =========================
         // PERSISTÊNCIA (JSON)
@@ -187,29 +328,24 @@ namespace MangaTracker.Services
                 if (dados.UsuarioAtualId != Guid.Empty)
                     _usuarioAtualId = dados.UsuarioAtualId;
 
-                if (_usuarios.Count == 0)
-                {
-                    // Removemos a criação do "Rafael". Agora o sistema depende do seu dados.json.
-                    SalvarDados();
-                }
-
                 _catalogo.Clear();
                 _catalogo.AddRange(dados.Catalogo);
 
                 _minhaLista.Clear();
                 _minhaLista.AddRange(dados.MinhaLista);
 
+                // Migração simples: leituras antigas sem UsuarioId
                 bool migrou = false;
                 for (int i = 0; i < _minhaLista.Count; i++)
                 {
-                    if (_minhaLista[i].UsuarioId == Guid.Empty)
+                    if (_minhaLista[i].UsuarioId == Guid.Empty && _usuarioAtualId != Guid.Empty)
                     {
                         _minhaLista[i].UsuarioId = _usuarioAtualId;
                         migrou = true;
                     }
                 }
 
-                if (migrou) SalvarDados();
+                if (migrou) AutoSalvar();
             }
         }
 
@@ -221,84 +357,70 @@ namespace MangaTracker.Services
                 {
                     Catalogo = _catalogo.ToList(),
                     Usuarios = _usuarios.ToList(),
-                    MinhaLista = _minhaLista.ToList(), // Corrigido: Agora salva suas leituras
-                    UsuarioAtualId = _usuarioAtualId   // Corrigido: Salva quem está logado
+                    MinhaLista = _minhaLista.ToList(),
+                    UsuarioAtualId = _usuarioAtualId
                 };
                 _storage.Salvar(dados);
             }
         }
 
-        // =========================
-        // USUÁRIOS E HELPERS
-        // =========================
-        public IReadOnlyList<Usuario> ListarUsuarios() => _usuarios;
-
-        public Usuario? BuscarUsuarioPorId(Guid id)
-            => _usuarios.FirstOrDefault(u => u.Id == id);
-
-        public bool DefinirUsuarioAtual(Guid usuarioId)
-        {
-            if (BuscarUsuarioPorId(usuarioId) is null) return false;
-            _usuarioAtualId = usuarioId;
-            AutoSalvar();
-            return true;
-        }
-
-        private IEnumerable<Leitura> LeiturasDoUsuarioAtual()
-            => _minhaLista.Where(l => l.UsuarioId == _usuarioAtualId);
-
-        private static string NormalizarTitulo(string titulo)
-            => titulo.Trim().ToUpperInvariant();
-
         public string CaminhoDoArquivoDeDados() => _storage.CaminhoArquivo;
 
+        // =========================
+        // CADASTRO / LOGIN
+        // =========================
         public void CadastrarNovoUsuario(string nome, string email, string senha)
         {
-            // 1. Verificamos se o nome já existe (você já tinha essa parte)
-            if (_usuarios.Any(u => u.Nome.Equals(nome, StringComparison.OrdinalIgnoreCase)))
+            lock (_lock)
             {
-                throw new Exception("Este nome de usuário já está sendo usado.");
+                if (_usuarios.Any(u => u.Nome.Equals(nome, StringComparison.OrdinalIgnoreCase)))
+                    throw new Exception("Este nome de usuário já está sendo usado.");
+
+                if (_usuarios.Any(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase)))
+                    throw new Exception("Este e-mail já está cadastrado em outra conta.");
+
+                var novo = new Usuario
+                {
+                    Id = Guid.NewGuid(),
+                    Nome = nome,
+                    Email = email,
+                    Senha = senha,
+                    EhAdmin = false
+                };
+
+                _usuarios.Add(novo);
+                AutoSalvar();
             }
-
-            // 2. NOVA REGRA: Verificamos se o e-mail já existe
-            // O 'Any' vai percorrer a lista procurando alguém com o mesmo e-mail
-            if (_usuarios.Any(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase)))
-            {
-                throw new Exception("Este e-mail já está cadastrado em outra conta.");
-            }
-
-            // 3. Se passou pelas duas travas, criamos o usuário
-            var novo = new Usuario
-            {
-                Id = Guid.NewGuid(),
-                Nome = nome,
-                Email = email,
-                Senha = senha,
-                EhAdmin = false
-            };
-
-            _usuarios.Add(novo);
-            SalvarDados();
         }
 
         public Usuario ValidarLogin(string identificador, string senha)
         {
-            // Procura na lista de usuários por Nome OU por Email
-            var usuario = _usuarios.FirstOrDefault(u =>
-                u.Nome.Equals(identificador, StringComparison.OrdinalIgnoreCase) ||
-                u.Email.Equals(identificador, StringComparison.OrdinalIgnoreCase));
-
-            // Se não achar ninguém ou a senha estiver errada, avisa o erro
-            if (usuario == null || usuario.Senha != senha)
+            lock (_lock)
             {
-                throw new Exception("Usuário/E-mail ou senha incorretos.");
+                var usuario = _usuarios.FirstOrDefault(u =>
+                    u.Nome.Equals(identificador, StringComparison.OrdinalIgnoreCase) ||
+                    u.Email.Equals(identificador, StringComparison.OrdinalIgnoreCase));
+
+                if (usuario == null || usuario.Senha != senha)
+                    throw new Exception("Usuário/E-mail ou senha incorretos.");
+
+                _usuarioAtualId = usuario.Id;
+                AutoSalvar();
+
+                return usuario;
             }
+        }
 
-            // Se deu certo, ele vira o usuário ativo do sistema
-            _usuarioAtualId = usuario.Id;
-            AutoSalvar();
+        // =========================
+        // HELPERS
+        // =========================
+        private static string NormalizarTitulo(string titulo)
+            => titulo.Trim().ToUpperInvariant();
 
-            return usuario;
+        private static string? NormalizeEditoraKey(string? s)
+        {
+            if (string.IsNullOrWhiteSpace(s)) return null;
+            return s.Trim().ToLowerInvariant();
         }
     }
 }

@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MangaTracker Brasil - Home</title>
+    <title>MangaTracker Brasil - Minha Lista</title>
+
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
@@ -12,62 +13,9 @@
             margin: 0;
         }
 
-        /* ======= NAVBAR ======= */
-        .navbar {
-            background: #000;
-            padding: 15px 50px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 3px solid #e21;
-        }
-
-        .logo {
-            font-size: 1.5em;
-            font-weight: bold;
-            text-decoration: none;
-            color: white;
-        }
-
-            .logo span {
-                color: #e21;
-            }
-
-        .nav-buttons {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: bold;
-            cursor: pointer;
-            border: none;
-            display: inline-block;
-        }
-
-        .btn-login {
-            background: transparent;
-            color: white;
-            border: 1px solid white;
-        }
-
-        .btn-cadastro {
-            background: #e21;
-            color: white;
-        }
-
-        .btn-login:hover {
-            background: white;
-            color: black;
-        }
-
         /* ======= LAYOUT MAL-LIKE ======= */
         .page {
-            max-width: 1100px; /* mais “MAL” (compacto central) */
+            max-width: 1100px;
             margin: 0 auto;
             padding: 18px 16px 60px;
         }
@@ -167,7 +115,8 @@
             margin: 0 0 12px;
         }
 
-            .section-title h2, .section-title h3 {
+            .section-title h2,
+            .section-title h3 {
                 margin: 0;
                 font-size: 1.1em;
             }
@@ -265,77 +214,52 @@
             border-radius: 12px;
         }
 
-        /* ======= MENU DO USUÁRIO (igual o seu) ======= */
-        .userbox {
-            position: relative;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .userbtn {
-            background: transparent;
-            color: white;
-            border: 1px solid #333;
-            padding: 10px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-            .userbtn:hover {
-                background: #1e1e1e;
-            }
-
-        .badge {
-            font-size: .75em;
-            padding: 2px 8px;
-            border-radius: 999px;
-            border: 1px solid #e21;
-            color: #e21;
-            margin-left: 6px;
-        }
-
-        .dropdown {
-            position: absolute;
-            right: 0;
-            top: 44px;
-            background: #111;
+        /* ======= Minha Lista (itens) ======= */
+        .ml-item {
+            background: #141414;
             border: 1px solid #2a2a2a;
             border-radius: 12px;
-            width: 240px;
-            padding: 8px;
-            display: none;
-            box-shadow: 0 10px 25px rgba(0,0,0,.5);
-            z-index: 999;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: flex-start;
         }
 
-            .dropdown a, .dropdown button {
-                width: 100%;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 10px 10px;
-                border-radius: 10px;
-                text-decoration: none;
-                background: transparent;
-                border: none;
-                color: #ddd;
-                cursor: pointer;
-                font-size: 0.95em;
-                box-sizing: border-box;
-            }
+        .ml-title {
+            font-weight: 900;
+            line-height: 1.2;
+        }
 
-                .dropdown a:hover, .dropdown button:hover {
-                    background: #1f1f1f;
-                }
+        .ml-meta {
+            margin-top: 6px;
+            color: #aaa;
+        }
+
+        .ml-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-danger {
+            background: #e21;
+            color: #fff;
+            border: 1px solid #e21;
+            padding: 8px 10px;
+            border-radius: 10px;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+            .btn-danger:hover {
+                background: #ff3333;
+                border-color: #ff3333;
+            }
 
         /* responsivo */
         @media (max-width: 900px) {
-            .navbar {
-                padding: 15px 18px;
-            }
-
             .grid {
                 grid-template-columns: 1fr;
             }
@@ -354,21 +278,13 @@
         }
     </style>
 </head>
+
 <body>
-
-    <nav class="navbar">
-        <a href="index.html" class="logo">MANGA<span>TRACKER</span></a>
-
-        <!-- Aqui o JS vai renderizar: (Entrar/Criar Conta) OU (Usuário + menu) -->
-        <div class="nav-buttons" id="navArea">
-            <a href="login.html" class="btn btn-login">Entrar</a>
-            <a href="cadastro.html" class="btn btn-cadastro">Criar Conta</a>
-        </div>
-    </nav>
+    <!-- ✅ Navbar compartilhada -->
+    <div id="navbarHost"></div>
 
     <div class="page">
 
-        <!-- Ad principal (placeholder) -->
         <div class="top-ad">Espaço para anúncio (728x90)</div>
 
         <div class="grid">
@@ -376,23 +292,30 @@
             <div>
 
                 <div class="card hero">
-                    <h1>Bem-vindo ao MangaTracker Brasil 🇧🇷</h1>
+                    <h1>Minha Lista 📚</h1>
                     <p class="muted">
-                        Um catálogo focado nos mangás lançados no Brasil — e o seu espaço para organizar leituras,
-                        acompanhar capítulos e descobrir o que a galera está lendo.
+                        Aqui você organiza suas leituras, acompanha capítulos e mantém tudo sob controle.
                     </p>
 
                     <div class="chips">
-                        <span class="chip">📚 Catálogo BR</span>
                         <span class="chip">✅ Minha Lista</span>
-                        <span class="chip">📈 Progresso por capítulo</span>
-                        <span class="chip">🔥 Top do mês</span>
+                        <span class="chip">📈 Progresso</span>
+                        <span class="chip">📚 Catálogo BR</span>
                     </div>
 
                     <div class="hero-actions" id="heroActions">
                         <a class="btn-primary" href="cadastro.html">Começar agora gratuitamente</a>
                         <a class="btn-ghost" href="login.html">Já tenho conta</a>
                     </div>
+                </div>
+
+                <div class="card" style="margin-top:16px;">
+                    <div class="section-title">
+                        <h2>📚 Minha Lista</h2>
+                        <span class="muted" id="minhaListaStatus">—</span>
+                    </div>
+
+                    <div id="minhaListaBox" class="muted">Carregando...</div>
                 </div>
 
                 <div class="card" style="margin-top: 16px;">
@@ -438,7 +361,6 @@
                     </div>
 
                     <div class="rank-list" id="topList">
-                        <!-- mock (depois liga na API) -->
                         <div class="rank-item">
                             <div class="rank-num">1</div>
                             <div class="rank-info">
@@ -482,8 +404,13 @@
         </div>
     </div>
 
+    <!-- ✅ Navbar compartilhada -->
+    <script src="shared/navbar.js"></script>
+
     <script>
-        // ======= Usuário logado (Fase 1: localStorage) =======
+        mountNavbar();
+
+        // ======= Helpers =======
         function getUsuarioLogado() {
             try { return JSON.parse(localStorage.getItem('usuarioLogado')); }
             catch {
@@ -492,72 +419,124 @@
             }
         }
 
-        function logout() {
-            localStorage.removeItem('usuarioLogado');
-            window.location.reload();
-        }
-
-        // ======= Render do topo (Entrar/Cadastrar OU menu do usuário) =======
-        function renderNav() {
-            const nav = document.getElementById('navArea');
+        async function apiFetch(url, options = {}) {
             const u = getUsuarioLogado();
-
-            if (!u) {
-                nav.innerHTML = `
-              <a href="login.html" class="btn btn-login">Entrar</a>
-              <a href="cadastro.html" class="btn btn-cadastro">Criar Conta</a>
-            `;
-                return;
-            }
-
-            nav.innerHTML = `
-            <div class="userbox">
-              <button class="userbtn" id="userBtn">
-                Olá, ${u.nome}${u.isAdmin ? `<span class="badge">admin</span>` : ''} ▾
-              </button>
-              <div class="dropdown" id="dd">
-                <a href="minha-lista.html">📚 Minha Lista <span>›</span></a>
-                ${u.isAdmin ? `<a href="admin.html">➕ Cadastrar mangá <span>›</span></a>` : ``}
-                <button id="logoutBtn">🚪 Sair <span>›</span></button>
-              </div>
-            </div>
-          `;
-
-            const btn = document.getElementById('userBtn');
-            const dd = document.getElementById('dd');
-            const logoutBtn = document.getElementById('logoutBtn');
-
-            btn.addEventListener('click', () => {
-                dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
-            });
-
-            logoutBtn.addEventListener('click', () => logout());
-
-            document.addEventListener('click', (e) => {
-                if (!e.target.closest('.userbox')) dd.style.display = 'none';
-            });
+            const headers = options.headers ? { ...options.headers } : {};
+            if (u?.id) headers['X-User-Id'] = u.id;
+            return fetch(url, { ...options, headers });
         }
 
-        // CTA muda quando logado (home continua fixa)
+        function statusTexto(st) {
+            if (st === 1) return "Pretendo ler";
+            if (st === 2) return "Lendo";
+            if (st === 3) return "Concluído";
+            return "—";
+        }
+
+        // CTA muda quando logado
         function renderHeroActions() {
             const wrap = document.getElementById('heroActions');
             const u = getUsuarioLogado();
 
             if (!u) {
                 wrap.innerHTML = `
-              <a class="btn-primary" href="cadastro.html">Começar agora gratuitamente</a>
-              <a class="btn-ghost" href="login.html">Já tenho conta</a>
-            `;
+                      <a class="btn-primary" href="cadastro.html">Começar agora gratuitamente</a>
+                      <a class="btn-ghost" href="login.html">Já tenho conta</a>
+                    `;
             } else {
                 wrap.innerHTML = `
-              <a class="btn-primary" href="minha-lista.html">Ir para Minha Lista</a>
-              ${u.isAdmin ? `<a class="btn-ghost" href="admin.html">Cadastrar mangá (admin)</a>` : `<a class="btn-ghost" href="minha-lista.html">Atualizar progresso</a>`}
-            `;
+                      <a class="btn-primary" href="minha-lista.html">Atualizar minha lista</a>
+                      ${u.isAdmin ? `<a class="btn-ghost" href="admin.html">Admin (Catálogo)</a>` : `<a class="btn-ghost" href="index.html">Voltar para Home</a>`}
+                    `;
             }
         }
 
-        renderNav();
+        // Remover da lista
+        async function removerDaMinhaLista(mangaId, titulo) {
+            const u = getUsuarioLogado();
+            if (!u?.id) { alert("Faça login."); return; }
+
+            const ok = confirm(`Remover "${titulo}" da sua lista?`);
+            if (!ok) return;
+
+            try {
+                const res = await apiFetch(`/api/minhalista/${mangaId}`, { method: 'DELETE' });
+                const dados = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    alert(dados?.erro || "Erro ao remover.");
+                    return;
+                }
+
+                await carregarMinhaLista();
+            } catch {
+                alert("Erro ao conectar com a API.");
+            }
+        }
+
+        async function carregarMinhaLista() {
+            const u = getUsuarioLogado();
+            const box = document.getElementById('minhaListaBox');
+            const st = document.getElementById('minhaListaStatus');
+
+            if (!u?.id) {
+                st.textContent = "Faça login";
+                box.innerHTML = `<div class="muted">Você precisa estar logado para ver sua lista.</div>`;
+                return;
+            }
+
+            st.textContent = "Carregando...";
+            box.innerHTML = `<div class="muted">Carregando sua lista...</div>`;
+
+            try {
+                const res = await apiFetch('/api/minhalista');
+                const dados = await res.json().catch(() => ([]));
+
+                if (!res.ok) {
+                    st.textContent = "Erro";
+                    box.innerHTML = `<div class="muted">${dados?.erro || 'Erro ao carregar sua lista.'}</div>`;
+                    return;
+                }
+
+                const lista = Array.isArray(dados) ? dados : [];
+                if (lista.length === 0) {
+                    st.textContent = "Vazia";
+                    box.innerHTML = `<div class="muted">Sua lista ainda está vazia. Vá no catálogo e adicione um mangá.</div>`;
+                    return;
+                }
+
+                st.textContent = `${lista.length} item(ns)`;
+
+                box.innerHTML = `
+                      <div style="display:grid; gap:10px;">
+                        ${lista.map(item => `
+                          <div class="ml-item">
+                            <div style="min-width:0;">
+                              <div class="ml-title">${item.titulo}</div>
+                              <div class="ml-meta">
+                                Status: <b>${statusTexto(item.status)}</b> • Capítulo: <b>${item.capituloAtual}</b>
+                                ${item.totalCapitulos ? ` / ${item.totalCapitulos}` : ``}
+                              </div>
+                            </div>
+
+                            <div class="ml-actions">
+                              <button class="btn-danger"
+                                onclick="removerDaMinhaLista('${item.mangaId}', '${String(item.titulo).replace(/'/g, "\\'")}')">
+                                Remover
+                              </button>
+                            </div>
+                          </div>
+                        `).join('')}
+                      </div>
+                    `;
+            } catch {
+                st.textContent = "Offline";
+                box.innerHTML = `<div class="muted">Erro ao conectar com a API. Confira se o MangaTracker.Api está rodando.</div>`;
+            }
+        }
+
         renderHeroActions();
+        carregarMinhaLista();
     </script>
 </body>
 </html>

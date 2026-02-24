@@ -160,5 +160,29 @@ namespace MangaTracker.Api.Controllers
                 return BadRequest(new { erro = ex.Message });
             }
         }
+
+        // DELETE: api/minhalista/{mangaId}
+        [HttpDelete("{mangaId:guid}")]
+        public IActionResult Delete(
+            [FromHeader(Name = "X-User-Id")] Guid? userId,
+            Guid mangaId)
+        {
+            if (!TrySetUser(userId, out var erro))
+                return erro!;
+
+            if (mangaId == Guid.Empty)
+                return BadRequest(new { erro = "mangaId inválido." });
+
+            try
+            {
+                // vamos criar esse método no service no próximo passo
+                _service.RemoverDaMinhaLista(mangaId);
+                return Ok(new { mensagem = "Removido da sua lista!" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { erro = ex.Message });
+            }
+        }
     }
 }

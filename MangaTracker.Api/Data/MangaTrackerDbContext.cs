@@ -12,6 +12,8 @@ namespace MangaTracker.Api.Data
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Leitura> Leituras { get; set; }
 
+        public DbSet<AdminLog> AdminLogs => Set<AdminLog>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Configuração da chave composta para a tabela de Leitura

@@ -13,42 +13,7 @@
             margin: 0;
         }
 
-        .navbar {
-            background: #000;
-            padding: 16px 50px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 3px solid #e50914;
-        }
-
-        .logo {
-            font-size: 1.5em;
-            font-weight: 800;
-            text-decoration: none;
-            color: white;
-            letter-spacing: .5px;
-        }
-
-            .logo span {
-                color: #e50914;
-            }
-
-        .menu a {
-            color: white;
-            text-decoration: none;
-            font-weight: 700;
-            padding: 10px 14px;
-            border-radius: 10px;
-            border: 1px solid transparent;
-            margin-left: 10px;
-        }
-
-            .menu a:hover {
-                background: #151515;
-                border-color: #2a2a2a;
-            }
-
+        /* ====== PAGE ====== */
         .container {
             max-width: 1100px;
             margin: 24px auto;
@@ -100,6 +65,7 @@
             display: flex;
             gap: 10px;
             margin-top: 14px;
+            flex-wrap: wrap;
         }
 
         button {
@@ -126,6 +92,26 @@
                 border-color: #ff1a1a;
             }
 
+        .smallbtn {
+            padding: 8px 10px;
+            border-radius: 10px;
+            font-size: .9em;
+        }
+
+        .warn {
+            background: #111;
+            border: 1px solid #2a2a2a;
+            padding: 12px 14px;
+            border-radius: 14px;
+            color: #d6d6d6;
+            margin-bottom: 14px;
+            display: none;
+        }
+
+        .hidden {
+            display: none;
+        }
+
         .list {
             margin-top: 10px;
             border-top: 1px solid #242424;
@@ -145,7 +131,7 @@
             }
 
         .title {
-            font-weight: 800;
+            font-weight: 900;
         }
 
         .meta {
@@ -155,21 +141,68 @@
             line-height: 1.35;
         }
 
-        .smallbtn {
-            padding: 8px 10px;
-            border-radius: 10px;
-            font-size: .9em;
+        /* Filtro A-Z */
+        .letters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
         }
 
-        .warn {
-            background: #111;
+        .chip {
+            padding: 6px 10px;
+            border-radius: 999px;
             border: 1px solid #2a2a2a;
-            padding: 12px 14px;
-            border-radius: 14px;
-            color: #d6d6d6;
-            margin-bottom: 14px;
+            background: #0f0f0f;
+            color: #ddd;
+            font-weight: 800;
+            cursor: pointer;
+            font-size: .85em;
         }
 
+            .chip:hover {
+                background: #171717;
+            }
+
+            .chip.active {
+                border-color: #e50914;
+                color: #fff;
+                background: rgba(229,9,20,.15);
+            }
+
+        /* Modal */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.65);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            padding: 16px;
+        }
+
+        .modal {
+            width: 100%;
+            max-width: 560px;
+            background: #121212;
+            border: 1px solid #2a2a2a;
+            border-radius: 18px;
+            box-shadow: 0 18px 60px rgba(0,0,0,.7);
+            padding: 18px;
+        }
+
+            .modal h3 {
+                margin: 0 0 10px 0;
+            }
+
+        .muted {
+            color: #aaa;
+            font-size: .9em;
+            margin-bottom: 12px;
+        }
+
+        /* checkbox */
         .checkRow {
             display: flex;
             align-items: center;
@@ -184,21 +217,7 @@
                 accent-color: #e50914;
             }
 
-        .hint {
-            color: #9a9a9a;
-            font-size: .85em;
-            margin-top: 6px;
-        }
-
-        .hidden {
-            display: none;
-        }
-
         @media (max-width: 980px) {
-            .navbar {
-                padding: 14px 18px;
-            }
-
             .grid {
                 grid-template-columns: 1fr;
             }
@@ -207,21 +226,14 @@
 </head>
 
 <body>
-    <nav class="navbar">
-        <a href="index.html" class="logo">MANGA<span>TRACKER</span></a>
-
-        <div class="menu">
-            <a href="index.html">Home</a>
-            <a href="minha-lista.html">Minha Lista</a>
-            <a href="#" id="logoutLink">Sair</a>
-        </div>
-    </nav>
+    <!-- ✅ Navbar compartilhada -->
+    <div id="navbarHost"></div>
 
     <div class="container">
         <h1>Área do Admin</h1>
-        <p>Cadastre mangás no catálogo para os usuários adicionarem na lista de leitura.</p>
+        <p>Cadastre, edite e remova mangás do catálogo.</p>
 
-        <div class="warn" id="warnBox" style="display:none;"></div>
+        <div class="warn" id="warnBox"></div>
 
         <div class="grid">
             <!-- Card cadastro -->
@@ -232,12 +244,12 @@
                 <label>Título</label>
                 <input id="titulo" type="text" placeholder="Ex: Fullmetal Alchemist" />
 
-                <label style="margin-top:14px;">
-                    <input type="checkbox" id="lancadoNoBrasil" style="width:auto; margin-right:6px;" />
-                    Lançado no Brasil
-                </label>
+                <div class="checkRow">
+                    <input type="checkbox" id="lancadoNoBrasil" />
+                    <label for="lancadoNoBrasil" style="margin:0; cursor:pointer;">Lançado no Brasil</label>
+                </div>
 
-                <div id="editoraBox" style="display:none;">
+                <div id="editoraBox" class="hidden">
                     <label>Editora</label>
                     <input id="editora" type="text" placeholder="Ex: Panini" />
                 </div>
@@ -248,35 +260,75 @@
                 </div>
             </div>
 
-            <!-- Card lista -->
+            <!-- Card catálogo -->
             <div class="card">
-                <h2>Catálogo atual</h2>
-                <p>Lista completa do que já está disponível pros usuários.</p>
+                <h2>Catálogo</h2>
+                <p>Busque, filtre por letra e edite/exclua itens.</p>
 
-                <div class="actions" style="margin-top:0;">
-                    <button id="btnRecarregar">Recarregar</button>
+                <label>Pesquisar por nome</label>
+                <input id="q" type="text" placeholder="Ex: dragon, naruto, one..." />
+
+                <div class="actions" style="margin-top:12px;">
+                    <button id="btnBuscar">Buscar</button>
+                    <button id="btnTodos">Todos</button>
+                    <span class="muted" id="catalogoCount" style="align-self:center;">—</span>
                 </div>
 
-                <div class="list" id="catalogoList">
-                    <!-- preenchido pelo JS -->
+                <div class="letters" id="lettersBar"></div>
+                <div class="list" id="catalogoList"></div>
+            </div>
+
+            <!-- Card logs -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <h2>📜 Logs do Admin</h2>
+                <p>Últimas ações feitas no catálogo (cadastro, edição, exclusão).</p>
+
+                <div class="actions" style="margin-top:12px;">
+                    <button id="btnLogs">Atualizar logs</button>
+                    <span class="muted" id="logsStatus" style="align-self:center;">—</span>
                 </div>
+
+                <div class="list" id="logsList"></div>
             </div>
         </div>
     </div>
 
+    <!-- Modal editar -->
+    <div class="modal-backdrop" id="modalBackdrop">
+        <div class="modal">
+            <h3>Editar mangá</h3>
+            <div class="muted" id="modalIdInfo">—</div>
+
+            <label>Título</label>
+            <input id="editTitulo" type="text" />
+
+            <div class="checkRow">
+                <input type="checkbox" id="editLancado" />
+                <label for="editLancado" style="margin:0; cursor:pointer;">Lançado no Brasil</label>
+            </div>
+
+            <div id="editEditoraBox" class="hidden">
+                <label>Editora</label>
+                <input id="editEditora" type="text" placeholder="Ex: Panini" />
+            </div>
+
+            <div class="actions" style="margin-top:14px;">
+                <button class="btn-danger" id="btnSalvarEdicao">Salvar</button>
+                <button id="btnCancelarEdicao">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ Navbar compartilhada -->
+    <script src="shared/navbar.js"></script>
+
     <script>
-        // ========= Helpers de login =========
+        // ========= Helpers =========
         function getUsuarioLogado() {
             try { return JSON.parse(localStorage.getItem('usuarioLogado')); }
             catch { return null; }
         }
 
-        function logout() {
-            localStorage.removeItem('usuarioLogado');
-            window.location.href = 'index.html';
-        }
-
-        // Fetch que manda X-User-Id
         async function apiFetch(url, options = {}) {
             const u = getUsuarioLogado();
             const headers = options.headers ? { ...options.headers } : {};
@@ -299,7 +351,6 @@
         // ========= Proteção: só admin =========
         async function garantirAdmin() {
             const u = getUsuarioLogado();
-
             if (!u?.id) {
                 alert('Você precisa estar logado para acessar o Admin.');
                 window.location.href = 'login.html';
@@ -323,79 +374,154 @@
                 }
 
                 return true;
-            } catch (e) {
+            } catch {
                 alert('Erro ao validar usuário no servidor. Verifique se a API está rodando.');
                 return false;
             }
         }
 
-        // ========= UI Editora =========
+        // ========= Letras A-Z =========
+        let filtroLetra = '';
+        let debounceTimer = null;
+
+        function setCatalogoCount(txt) {
+            document.getElementById('catalogoCount').textContent = txt;
+        }
+
+        function montarLetras() {
+            const bar = document.getElementById('lettersBar');
+            const letras = ['Todos', '#'];
+            for (let i = 65; i <= 90; i++) letras.push(String.fromCharCode(i));
+
+            bar.innerHTML = letras.map(l => {
+                const key = l === 'Todos' ? '' : l;
+                return `<button class="chip ${filtroLetra === key ? 'active' : ''}" data-letter="${key}">${l}</button>`;
+            }).join('');
+
+            bar.querySelectorAll('button').forEach(b => {
+                b.addEventListener('click', () => {
+                    filtroLetra = b.dataset.letter || '';
+                    montarLetras();
+                    carregarCatalogo();
+                });
+            });
+        }
+
+        // ========= Catálogo =========
+        async function carregarCatalogo() {
+            hideWarn();
+            setCatalogoCount('Carregando...');
+
+            const container = document.getElementById('catalogoList');
+            container.innerHTML = '<div style="padding:12px;color:#aaa;">Carregando...</div>';
+
+            const q = document.getElementById('q').value.trim();
+            const url = q ? `/api/catalogo?q=${encodeURIComponent(q)}` : `/api/catalogo`;
+
+            try {
+                const res = await apiFetch(url);
+                const dados = await res.json();
+
+                if (!res.ok) {
+                    container.innerHTML = '';
+                    showWarn(dados?.erro || 'Erro ao carregar.');
+                    setCatalogoCount('—');
+                    return;
+                }
+
+                let lista = (dados || []).sort((a, b) =>
+                    (a.titulo || '').localeCompare(b.titulo || '', 'pt-BR', { sensitivity: 'base' })
+                );
+
+                if (filtroLetra === '#') {
+                    lista = lista.filter(m => {
+                        const c = (m.titulo || '').charAt(0).toUpperCase();
+                        return c < 'A' || c > 'Z';
+                    });
+                } else if (filtroLetra) {
+                    lista = lista.filter(m => (m.titulo || '').toUpperCase().startsWith(filtroLetra));
+                }
+
+                if (lista.length === 0) {
+                    container.innerHTML = '<div style="padding:12px;color:#aaa;">Nenhum resultado.</div>';
+                    setCatalogoCount('0 resultado(s)');
+                    return;
+                }
+
+                setCatalogoCount(`${lista.length} resultado(s)`);
+
+                container.innerHTML = lista.map(m => `
+                        <div class="row">
+                            <div style="min-width:0;">
+                                <div class="title">${escapeHtml(m.titulo)}</div>
+                                <div class="meta">
+                                    Lançado BR: ${m.lancadoNoBrasil ? 'Sim' : 'Não'}
+                                    • Editora: ${escapeHtml(m.editora || '—')}
+                                    <br/>ID: ${m.id}
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+                                <button class="smallbtn" onclick="abrirEditar('${m.id}','${escapeHtml(m.titulo)}',${m.lancadoNoBrasil},'${escapeHtml(m.editora || '')}')">Editar</button>
+                                <button class="smallbtn btn-danger" onclick="excluirManga('${m.id}','${escapeHtml(m.titulo)}')">Excluir</button>
+                            </div>
+                        </div>
+                    `).join('');
+
+            } catch {
+                container.innerHTML = '';
+                showWarn('Erro ao conectar com a API.');
+                setCatalogoCount('—');
+            }
+        }
+
+        function escapeHtml(s) {
+            return String(s)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+
+        function unescapeHtml(s) {
+            return String(s)
+                .replaceAll('&lt;', '<')
+                .replaceAll('&gt;', '>')
+                .replaceAll('&quot;', '"')
+                .replaceAll('&#039;', "'")
+                .replaceAll('&amp;', '&');
+        }
+
+        // ========= Busca =========
+        document.getElementById('q').addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => carregarCatalogo(), 350);
+        });
+
+        document.getElementById('btnBuscar').addEventListener('click', carregarCatalogo);
+
+        document.getElementById('btnTodos').addEventListener('click', () => {
+            document.getElementById('q').value = '';
+            filtroLetra = '';
+            montarLetras();
+            carregarCatalogo();
+        });
+
+        // ========= Cadastro =========
         function atualizarEditoraUI() {
             const chk = document.getElementById('lancadoNoBrasil');
             const box = document.getElementById('editoraBox');
             const editora = document.getElementById('editora');
 
-            if (chk.checked) {
-                box.classList.remove('hidden');
-            } else {
+            if (chk.checked) box.classList.remove('hidden');
+            else {
                 box.classList.add('hidden');
                 editora.value = '';
             }
         }
 
-        // ========= Carregar catálogo =========
-        async function carregarCatalogo() {
-            hideWarn();
+        document.getElementById('lancadoNoBrasil').addEventListener('change', atualizarEditoraUI);
 
-            const container = document.getElementById('catalogoList');
-            container.innerHTML = '<div style="padding:12px 0; color:#aaa;">Carregando...</div>';
-
-            try {
-                const res = await apiFetch('/api/catalogo');
-                const dados = await res.json();
-
-                if (!res.ok) {
-                    container.innerHTML = '';
-                    showWarn(dados?.erro || 'Erro ao carregar catálogo.');
-                    return;
-                }
-
-                const lista = (dados || [])
-                    .sort((a, b) => (a.titulo || '').localeCompare(b.titulo || '', 'pt-BR', { sensitivity: 'base' }));
-
-                if (lista.length === 0) {
-                    container.innerHTML = '<div style="padding:12px 0; color:#aaa;">Catálogo vazio ainda.</div>';
-                    return;
-                }
-
-                container.innerHTML = lista.map(m => {
-                    const br = m.lancadoNoBrasil ? 'Sim' : 'Não';
-                    const editora = (m.editora && String(m.editora).trim() !== '') ? m.editora : '—';
-                    const caps = (m.totalCapitulos ?? '—');
-
-                    return `
-                        <div class="row">
-                            <div style="min-width:0;">
-                                <div class="title">${m.titulo}</div>
-                                <div class="meta">
-                                    Capítulos: ${caps} • Lançado BR: ${br} • Editora: ${editora}<br/>
-                                    ID: ${m.id}
-                                </div>
-                            </div>
-                            <div>
-                                <!-- futuro: excluir/editar -->
-                            </div>
-                        </div>
-                        `;
-                }).join('');
-
-            } catch (e) {
-                container.innerHTML = '';
-                showWarn('Erro ao conectar com a API. Veja se você deu Play no projeto MangaTracker.Api.');
-            }
-        }
-
-        // ========= Cadastrar =========
         async function cadastrarManga() {
             hideWarn();
 
@@ -403,77 +529,189 @@
             const lancadoNoBrasil = document.getElementById('lancadoNoBrasil').checked;
             const editora = document.getElementById('editora').value.trim();
 
-            if (!titulo) {
-                showWarn('Título é obrigatório.');
-                return;
-            }
-
-            if (lancadoNoBrasil && !editora) {
-                showWarn('Informe a editora se o mangá for lançado no Brasil.');
-                return;
-            }
+            if (!titulo) return showWarn('Título é obrigatório.');
+            if (lancadoNoBrasil && !editora) return showWarn('Informe a editora se o mangá for lançado no Brasil.');
 
             try {
                 const res = await apiFetch('/api/catalogo', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        titulo,
-                        lancadoNoBrasil,
-                        editora
-                    })
+                    body: JSON.stringify({ titulo, lancadoNoBrasil, editora })
                 });
 
                 const dados = await res.json();
 
-                if (!res.ok) {
-                    showWarn(dados?.erro || 'Erro ao cadastrar.');
-                    return;
-                }
+                if (!res.ok) return showWarn(dados?.erro || 'Erro ao cadastrar.');
 
-                alert(`Mangá cadastrado: ${dados.titulo}`);
                 document.getElementById('titulo').value = '';
                 document.getElementById('editora').value = '';
                 document.getElementById('lancadoNoBrasil').checked = false;
-                document.getElementById('editoraBox').style.display = 'none';
+                atualizarEditoraUI();
 
                 await carregarCatalogo();
-
-            } catch (e) {
+                await carregarLogs();
+            } catch {
                 showWarn('Erro ao conectar com a API.');
             }
         }
 
-        // ========= Eventos =========
-        document.getElementById('logoutLink').addEventListener('click', (e) => {
-            e.preventDefault();
-            logout();
-        });
-
-        document.getElementById('lancadoNoBrasil').addEventListener('change', atualizarEditoraUI);
-
         document.getElementById('btnCadastrar').addEventListener('click', cadastrarManga);
-        document.getElementById('btnRecarregar').addEventListener('click', carregarCatalogo);
+
         document.getElementById('btnLimpar').addEventListener('click', () => {
             document.getElementById('titulo').value = '';
-            document.getElementById('totalCapitulos').value = '';
             document.getElementById('lancadoNoBrasil').checked = false;
             document.getElementById('editora').value = '';
             atualizarEditoraUI();
             hideWarn();
         });
 
-        document.getElementById('lancadoNoBrasil').addEventListener('change', (e) => {
-            document.getElementById('editoraBox').style.display =
-                e.target.checked ? 'block' : 'none';
+        // ========= Editar =========
+        let editIdAtual = null;
+
+        function atualizarEditoraUIEdicao() {
+            const chk = document.getElementById('editLancado');
+            const box = document.getElementById('editEditoraBox');
+            const editora = document.getElementById('editEditora');
+
+            if (chk.checked) box.classList.remove('hidden');
+            else {
+                box.classList.add('hidden');
+                editora.value = '';
+            }
+        }
+
+        document.getElementById('editLancado').addEventListener('change', atualizarEditoraUIEdicao);
+
+        function abrirEditar(id, titulo, lancado, editora) {
+            editIdAtual = id;
+            document.getElementById('modalIdInfo').textContent = `ID: ${id}`;
+            document.getElementById('editTitulo').value = unescapeHtml(titulo);
+            document.getElementById('editLancado').checked = !!lancado;
+            document.getElementById('editEditora').value = unescapeHtml(editora || '');
+            atualizarEditoraUIEdicao();
+            document.getElementById('modalBackdrop').style.display = 'flex';
+        }
+
+        function fecharEditar() {
+            editIdAtual = null;
+            document.getElementById('modalBackdrop').style.display = 'none';
+        }
+
+        async function salvarEdicao() {
+            hideWarn();
+            if (!editIdAtual) return;
+
+            const titulo = document.getElementById('editTitulo').value.trim();
+            const lancadoNoBrasil = document.getElementById('editLancado').checked;
+            let editora = document.getElementById('editEditora').value.trim();
+
+            if (!titulo) return showWarn('Título é obrigatório.');
+            if (lancadoNoBrasil && !editora) return showWarn('Informe a editora se for lançado no Brasil.');
+            if (!lancadoNoBrasil) editora = null;
+
+            const res = await apiFetch(`/api/catalogo/${editIdAtual}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ titulo, lancadoNoBrasil, editora })
+            });
+
+            const dados = await res.json();
+            if (!res.ok) return showWarn(dados?.erro || 'Erro ao editar.');
+
+            fecharEditar();
+            await carregarCatalogo();
+            await carregarLogs();
+        }
+
+        async function excluirManga(id, titulo) {
+            hideWarn();
+            const nome = unescapeHtml(titulo);
+
+            if (!confirm(`Excluir "${nome}"?`)) return;
+
+            const res = await apiFetch(`/api/catalogo/${id}`, { method: 'DELETE' });
+            const dados = await res.json().catch(() => ({}));
+
+            if (!res.ok) return showWarn(dados?.erro || 'Erro ao excluir.');
+
+            await carregarCatalogo();
+            await carregarLogs();
+        }
+
+        document.getElementById('btnSalvarEdicao').addEventListener('click', salvarEdicao);
+        document.getElementById('btnCancelarEdicao').addEventListener('click', fecharEditar);
+        document.getElementById('modalBackdrop').addEventListener('click', e => {
+            if (e.target.id === 'modalBackdrop') fecharEditar();
         });
+
+        // ========= Logs =========
+        function formatarDataBr(iso) {
+            try { return new Date(iso).toLocaleString('pt-BR'); }
+            catch { return iso || ''; }
+        }
+
+        async function carregarLogs() {
+            hideWarn();
+
+            const status = document.getElementById('logsStatus');
+            const list = document.getElementById('logsList');
+
+            status.textContent = 'Carregando...';
+            list.innerHTML = '<div style="padding:12px;color:#aaa;">Carregando...</div>';
+
+            try {
+                const res = await apiFetch('/api/adminlogs');
+                const dados = await res.json();
+
+                if (!res.ok) {
+                    status.textContent = 'Erro';
+                    list.innerHTML = '';
+                    showWarn(dados?.erro || 'Erro ao carregar logs.');
+                    return;
+                }
+
+                const logs = Array.isArray(dados) ? dados : [];
+
+                if (logs.length === 0) {
+                    status.textContent = 'Sem logs';
+                    list.innerHTML = '<div style="padding:12px;color:#aaa;">Nenhum log ainda.</div>';
+                    return;
+                }
+
+                status.textContent = `${logs.length} registro(s)`;
+
+                list.innerHTML = logs.map(l => `
+                        <div class="row">
+                            <div style="min-width:0;">
+                                <div class="title">${escapeHtml(l.acao || '—')} — ${escapeHtml(l.mangaTitulo || '—')}</div>
+                                <div class="meta">${formatarDataBr(l.data)} • Admin: ${escapeHtml(l.admin || '—')}</div>
+                            </div>
+                        </div>
+                    `).join('');
+
+            } catch {
+                status.textContent = 'Offline';
+                list.innerHTML = '';
+                showWarn('Não consegui conectar na API para buscar os logs.');
+            }
+        }
+
+        document.getElementById('btnLogs').addEventListener('click', carregarLogs);
 
         // ========= Start =========
         (async () => {
+            // monta navbar compartilhada (consistente em todas páginas)
+            if (typeof mountNavbar === 'function') mountNavbar();
+
             atualizarEditoraUI();
+            montarLetras();
+
             const ok = await garantirAdmin();
             if (!ok) return;
+
+            setCatalogoCount('—');
             await carregarCatalogo();
+            await carregarLogs();
         })();
     </script>
 </body>

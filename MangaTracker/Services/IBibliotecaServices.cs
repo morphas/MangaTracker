@@ -15,6 +15,8 @@ namespace MangaTracker.Services
         bool MangaExisteNoCatalogo(string titulo);
         Manga CadastrarNoCatalogo(string titulo, bool lancadoNoBrasil, string? editora);
         void DefinirTotalCapitulos(Guid mangaId, int? totalCapitulos);
+        Manga AtualizarMangaDoCatalogo(Guid mangaId, string titulo, bool lancadoNoBrasil, string? editora);
+        void RemoverMangaDoCatalogo(Guid mangaId);
 
         // =========================
         // MINHA LISTA (LEITURAS)
@@ -41,6 +43,8 @@ namespace MangaTracker.Services
         string CaminhoDoArquivoDeDados();
 
         void CadastrarNovoUsuario(string nome, string email, string senha);
+
+        void RemoverDaMinhaLista(Guid mangaId);
 
         // ADICIONE ESTA LINHA ABAIXO:
         Usuario ValidarLogin(string identificador, string senha);
