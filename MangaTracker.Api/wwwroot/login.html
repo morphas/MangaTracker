@@ -13,7 +13,6 @@
             margin: 0;
         }
 
-        /* Wrapper pra manter o card centralizado sem atrapalhar a navbar */
         .pageCenter {
             min-height: calc(100vh - 70px);
             display: flex;
@@ -86,7 +85,7 @@
 </head>
 
 <body>
-    <!-- ✅ Navbar compartilhada -->
+    <!-- Navbar compartilhada -->
     <div id="navbarHost"></div>
 
     <div class="pageCenter">
@@ -105,17 +104,17 @@
         </div>
     </div>
 
-    <!-- ✅ Navbar compartilhada -->
     <script src="shared/navbar.js"></script>
 
     <script>
         mountNavbar();
 
-        // Enter para logar
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 const active = document.activeElement?.id;
-                if (active === 'identificador' || active === 'senha') fazerLogin();
+                if (active === 'identificador' || active === 'senha') {
+                    fazerLogin();
+                }
             }
         });
 
@@ -138,12 +137,21 @@
                 const resultado = await resposta.json().catch(() => ({}));
 
                 if (resposta.ok) {
+
+                    // 🔥 Compatibilidade entre isAdmin e ehAdmin
+                    const usuarioNormalizado = {
+                        ...resultado,
+                        ehAdmin: resultado.ehAdmin ?? resultado.isAdmin ?? false
+                    };
+
+                    localStorage.setItem('usuarioLogado', JSON.stringify(usuarioNormalizado));
+
                     alert('Bem-vindo de volta, ' + (resultado.nome || 'usuário') + '!');
-                    localStorage.setItem('usuarioLogado', JSON.stringify(resultado));
                     window.location.href = 'index.html';
                 } else {
                     alert(resultado.erro || 'Login inválido.');
                 }
+
             } catch (erro) {
                 alert("Erro ao conectar com o servidor. Verifique se a API está rodando.");
             }

@@ -240,6 +240,8 @@
             display: flex;
             gap: 8px;
             align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
         }
 
         .btn-danger {
@@ -258,6 +260,35 @@
                 border-color: #ff3333;
             }
 
+        /* ✅ NOVO: inputs/select e botão salvar */
+        .ml-actions select,
+        .ml-actions input {
+            background: #0f0f0f;
+            color: #fff;
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            padding: 8px 10px;
+        }
+
+        .ml-actions input {
+            width: 90px;
+        }
+
+        .btn-save {
+            background: #2f6;
+            color: #0b0b0b;
+            border: 1px solid #2f6;
+            padding: 8px 10px;
+            border-radius: 10px;
+            font-weight: 900;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+            .btn-save:hover {
+                filter: brightness(1.05);
+            }
+
         /* responsivo */
         @media (max-width: 900px) {
             .grid {
@@ -274,6 +305,10 @@
 
             .top-ad {
                 height: 90px;
+            }
+
+            .ml-actions {
+                justify-content: flex-start;
             }
         }
     </style>
@@ -430,6 +465,7 @@
             if (st === 1) return "Pretendo ler";
             if (st === 2) return "Lendo";
             if (st === 3) return "Concluído";
+            if (st === 4) return "Pretendo comprar";
             return "—";
         }
 
@@ -440,14 +476,58 @@
 
             if (!u) {
                 wrap.innerHTML = `
-                      <a class="btn-primary" href="cadastro.html">Começar agora gratuitamente</a>
-                      <a class="btn-ghost" href="login.html">Já tenho conta</a>
-                    `;
+                          <a class="btn-primary" href="cadastro.html">Começar agora gratuitamente</a>
+                          <a class="btn-ghost" href="login.html">Já tenho conta</a>
+                        `;
             } else {
                 wrap.innerHTML = `
-                      <a class="btn-primary" href="minha-lista.html">Atualizar minha lista</a>
-                      ${u.isAdmin ? `<a class="btn-ghost" href="admin.html">Admin (Catálogo)</a>` : `<a class="btn-ghost" href="index.html">Voltar para Home</a>`}
-                    `;
+                          <a class="btn-primary" href="minha-lista.html">Atualizar minha lista</a>
+                          ${u.isAdmin ? `<a class="btn-ghost" href="admin.html">Admin (Catálogo)</a>` : `<a class="btn-ghost" href="index.html">Voltar para Home</a>`}
+                        `;
+            }
+        }
+
+        // ✅ NOVO: salvar status/capítulo
+        async function salvarProgresso(mangaId) {
+            const u = getUsuarioLogado();
+            if (!u?.id) { alert("Faça login."); return; }
+
+            const cap = document.getElementById(`cap_${mangaId}`)?.value;
+            const st = document.getElementById(`st_${mangaId}`)?.value;
+
+            const capituloAtual = parseInt(cap, 10);
+            const status = parseInt(st, 10);
+
+            if (Number.isNaN(capituloAtual) || capituloAtual < 0) {
+                alert("Capítulo inválido.");
+                return;
+            }
+
+            if (Number.isNaN(status) || status < 1 || status > 4) {
+                alert("Status inválido.");
+                return;
+            }
+
+            try {
+                const res = await apiFetch(`/api/minhalista/${mangaId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        capituloAtual: capituloAtual,
+                        status: status
+                    })
+                });
+
+                const dados = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    alert(dados?.erro || "Erro ao salvar.");
+                    return;
+                }
+
+                await carregarMinhaLista();
+            } catch {
+                alert("Erro ao conectar com a API.");
             }
         }
 
@@ -508,27 +588,38 @@
                 st.textContent = `${lista.length} item(ns)`;
 
                 box.innerHTML = `
-                      <div style="display:grid; gap:10px;">
-                        ${lista.map(item => `
-                          <div class="ml-item">
-                            <div style="min-width:0;">
-                              <div class="ml-title">${item.titulo}</div>
-                              <div class="ml-meta">
-                                Status: <b>${statusTexto(item.status)}</b> • Capítulo: <b>${item.capituloAtual}</b>
-                                ${item.totalCapitulos ? ` / ${item.totalCapitulos}` : ``}
-                              </div>
-                            </div>
+                          <div style="display:grid; gap:10px;">
+                            ${lista.map(item => `
+                              <div class="ml-item">
+                                <div style="min-width:0;">
+                                  <div class="ml-title">${item.titulo}</div>
+                                  <div class="ml-meta">
+                                    Status: <b>${statusTexto(item.status)}</b> • Capítulo: <b>${item.capituloAtual}</b>
+                                    ${item.totalCapitulos ? ` / ${item.totalCapitulos}` : ``}
+                                  </div>
+                                </div>
 
-                            <div class="ml-actions">
-                              <button class="btn-danger"
-                                onclick="removerDaMinhaLista('${item.mangaId}', '${String(item.titulo).replace(/'/g, "\\'")}')">
-                                Remover
-                              </button>
-                            </div>
+                                <div class="ml-actions">
+                                  <select id="st_${item.mangaId}">
+                                    <option value="1" ${item.status === 1 ? "selected" : ""}>Pretendo ler</option>
+                                    <option value="2" ${item.status === 2 ? "selected" : ""}>Lendo</option>
+                                    <option value="3" ${item.status === 3 ? "selected" : ""}>Concluído</option>
+                                    <option value="4" ${item.status === 4 ? "selected" : ""}>Pretendo comprar</option>
+                                  </select>
+
+                                  <input id="cap_${item.mangaId}" type="number" min="0" value="${item.capituloAtual ?? 0}" />
+
+                                  <button class="btn-save" onclick="salvarProgresso('${item.mangaId}')">Salvar</button>
+
+                                  <button class="btn-danger"
+                                    onclick="removerDaMinhaLista('${item.mangaId}', '${String(item.titulo).replace(/'/g, "\\'")}')">
+                                    Remover
+                                  </button>
+                                </div>
+                              </div>
+                            `).join('')}
                           </div>
-                        `).join('')}
-                      </div>
-                    `;
+                        `;
             } catch {
                 st.textContent = "Offline";
                 box.innerHTML = `<div class="muted">Erro ao conectar com a API. Confira se o MangaTracker.Api está rodando.</div>`;

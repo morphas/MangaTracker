@@ -6,40 +6,35 @@ using Microsoft.Extensions.Configuration;
 
 namespace MangaTracker.Api.Data
 {
-    // Esta classe é usada pelo EF apenas em tempo de design (Migrations / Update-Database).
-    // Ela precisa ler o appsettings.json para usar a mesma connection string do projeto.
+    // Usado pelo EF em tempo de design (migrations / update).
     public class MangaTrackerContextFactory : IDesignTimeDbContextFactory<MangaTrackerDbContext>
     {
         public MangaTrackerDbContext CreateDbContext(string[] args)
         {
-            // Garante que estamos apontando para a pasta do projeto da API (onde está o appsettings.json)
-            var basePath = Directory.GetCurrentDirectory();
+            // 1) Começa de onde o comando foi executado
+            var dir = new DirectoryInfo(Directory.GetCurrentDirectory());
 
-            // Se o comando for executado a partir de outro lugar, tenta “voltar” para achar o appsettings.json
-            // (isso evita erro quando o VS executa o comando de uma pasta diferente).
-            if (!File.Exists(Path.Combine(basePath, "appsettings.json")))
-            {
-                // tenta achar a pasta MangaTracker.Api subindo diretórios
-                var dir = new DirectoryInfo(basePath);
-                while (dir != null && !File.Exists(Path.Combine(dir.FullName, "appsettings.json")))
-                    dir = dir.Parent;
+            // 2) Sobe pastas até achar o csproj da API (isso evita pegar appsettings "errado")
+            while (dir != null && !File.Exists(Path.Combine(dir.FullName, "MangaTracker.Api.csproj")))
+                dir = dir.Parent;
 
-                if (dir != null)
-                    basePath = dir.FullName;
-            }
+            if (dir == null)
+                throw new InvalidOperationException("Não encontrei MangaTracker.Api.csproj subindo as pastas. Rode o comando dentro da pasta MangaTracker.Api.");
 
+            var basePath = dir.FullName;
+
+            // 3) Carrega config SEM mistério: exatamente da pasta do csproj
             var config = new ConfigurationBuilder()
                 .SetBasePath(basePath)
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
                 .AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: false)
-                .AddUserSecrets<MangaTrackerContextFactory>(optional: true)
                 .AddEnvironmentVariables()
                 .Build();
 
-            var conn = config.GetConnectionString("Default");
+            var conn = config.GetConnectionString("Default");            
 
             if (string.IsNullOrWhiteSpace(conn))
-                throw new InvalidOperationException("ConnectionStrings:Default não foi encontrada no appsettings.json.");
+                throw new InvalidOperationException("ConnectionStrings:Default não encontrada. Verifique appsettings.json.");
 
             var optionsBuilder = new DbContextOptionsBuilder<MangaTrackerDbContext>();
             optionsBuilder.UseNpgsql(conn);

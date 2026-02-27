@@ -1,4 +1,7 @@
-﻿using MangaTracker.Models;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using MangaTracker.Models;
 using MangaTracker.Services;
 using MangaTracker.Api.Data;
 using Microsoft.EntityFrameworkCore;
@@ -102,14 +105,12 @@ namespace MangaTracker.Api.Services
         }
 
         // =========================
-        // LOGS DE ADMIN (PASSO 4)
+        // LOGS DE ADMIN
         // =========================
         private void LogAdmin(string acao, string? detalhes = null)
         {
-            // Só loga se tiver usuário atual definido
             if (_usuarioAtualId == Guid.Empty) return;
 
-            // Confere se é admin (sem tracking)
             var u = _db.Usuarios.AsNoTracking().FirstOrDefault(x => x.Id == _usuarioAtualId);
             if (u is null || !u.EhAdmin) return;
 
@@ -134,8 +135,8 @@ namespace MangaTracker.Api.Services
 
         public Manga? BuscarMangaPorTitulo(string titulo)
         {
-            var t = (titulo ?? "").Trim().ToUpperInvariant();
-            return _db.Catalogo.FirstOrDefault(m => m.Titulo.ToUpper() == t);
+            var t = (titulo ?? "").Trim().ToLowerInvariant();
+            return _db.Catalogo.FirstOrDefault(m => (m.Titulo ?? "").ToLower() == t);
         }
 
         public bool MangaExisteNoCatalogo(string titulo)
@@ -153,11 +154,9 @@ namespace MangaTracker.Api.Services
             if (string.IsNullOrWhiteSpace(t))
                 throw new Exception("Título é obrigatório.");
 
-            // Se for lançado no Brasil, editora é obrigatória
             if (lancadoNoBrasil && string.IsNullOrWhiteSpace(editora))
                 throw new Exception("Editora é obrigatória quando o mangá é lançado no Brasil.");
 
-            // Se NÃO for lançado, editora tem que ficar nula
             if (!lancadoNoBrasil)
                 editora = null;
 
@@ -176,7 +175,6 @@ namespace MangaTracker.Api.Services
 
             _db.Catalogo.Add(manga);
 
-            // ✅ LOG (admin)
             LogAdmin("CATALOGO_CRIAR", $"Criou: {manga.Titulo} | BR={manga.LancadoNoBrasil} | Editora={manga.Editora ?? "—"}");
 
             _db.SaveChanges();
@@ -196,20 +194,16 @@ namespace MangaTracker.Api.Services
             if (string.IsNullOrWhiteSpace(t))
                 throw new Exception("Título é obrigatório.");
 
-            // Impede duplicar título em outro item
             var existeOutro = _db.Catalogo.Any(m => m.Id != mangaId && m.Titulo.ToLower() == t.ToLower());
             if (existeOutro)
                 throw new Exception("Já existe outro mangá com esse título no catálogo.");
 
-            // Se for lançado no Brasil, editora é obrigatória
             if (lancadoNoBrasil && string.IsNullOrWhiteSpace(editora))
                 throw new Exception("Informe a editora se o mangá for lançado no Brasil.");
 
-            // Se NÃO for lançado, limpa editora
             if (!lancadoNoBrasil)
                 editora = null;
 
-            // ✅ Captura "antes"
             var antes = $"{manga.Titulo} | BR={manga.LancadoNoBrasil} | Editora={manga.Editora ?? "—"}";
 
             manga.Titulo = t;
@@ -217,17 +211,69 @@ namespace MangaTracker.Api.Services
 
             var editoraFinal = string.IsNullOrWhiteSpace(editora) ? null : editora.Trim();
             manga.Editora = editoraFinal;
-
-            // ✅ mantém EditoraKey consistente
             manga.EditoraKey = NormalizeEditoraKey(editoraFinal);
 
-            // ✅ Captura "depois" + LOG
             var depois = $"{manga.Titulo} | BR={manga.LancadoNoBrasil} | Editora={manga.Editora ?? "—"}";
             LogAdmin("CATALOGO_EDITAR", $"ID={manga.Id} | Antes: {antes} | Depois: {depois}");
 
             _db.SaveChanges();
             return manga;
         }
+
+        public Manga AtualizarDetalhesManga(
+    Guid mangaId,
+    string? capaUrl,
+    string? descricao,
+    string? demografia,
+    string? autor,
+    int? anoLancamentoOriginal,
+    int? anoLancamentoBrasil
+)
+        {
+            if (mangaId == Guid.Empty)
+                throw new Exception("ID inválido.");
+
+            var manga = _db.Catalogo.FirstOrDefault(m => m.Id == mangaId);
+            if (manga is null)
+                throw new Exception("Mangá não encontrado.");
+
+            // Normaliza strings (evita salvar " " no banco)
+            static string? Clean(string? s)
+            {
+                if (string.IsNullOrWhiteSpace(s)) return null;
+                return s.Trim();
+            }
+
+            var antes =
+                $"Capa={(manga.CapaUrl ?? "—")} | " +
+                $"Demo={(manga.Demografia ?? "—")} | " +
+                $"Autor={(manga.Autor ?? "—")} | " +
+                $"AnoOrig={(manga.AnoLancamentoOriginal?.ToString() ?? "—")} | " +
+                $"AnoBR={(manga.AnoLancamentoBrasil?.ToString() ?? "—")}";
+
+            manga.CapaUrl = Clean(capaUrl);
+            manga.Descricao = Clean(descricao);
+            manga.Demografia = Clean(demografia);
+            manga.Autor = Clean(autor);
+            manga.AnoLancamentoOriginal = anoLancamentoOriginal;
+            manga.AnoLancamentoBrasil = anoLancamentoBrasil;
+
+            var depois =
+                $"Capa={(manga.CapaUrl ?? "—")} | " +
+                $"Demo={(manga.Demografia ?? "—")} | " +
+                $"Autor={(manga.Autor ?? "—")} | " +
+                $"AnoOrig={(manga.AnoLancamentoOriginal?.ToString() ?? "—")} | " +
+                $"AnoBR={(manga.AnoLancamentoBrasil?.ToString() ?? "—")}";
+
+            // ✅ LOG (admin)
+            LogAdmin("CATALOGO_DETALHES", $"ID={manga.Id} | {manga.Titulo} | Antes: {antes} | Depois: {depois}");
+
+            _db.SaveChanges();
+            return manga;
+        }
+
+        // ✅ NOVO: atualizar detalhes (admin preenche depois)
+        
 
         public void RemoverMangaDoCatalogo(Guid mangaId)
         {
@@ -238,10 +284,8 @@ namespace MangaTracker.Api.Services
             if (manga is null)
                 throw new Exception("Mangá não encontrado.");
 
-            // ✅ LOG (antes de remover)
             LogAdmin("CATALOGO_EXCLUIR", $"Excluiu: {manga.Titulo} | ID={manga.Id}");
 
-            // Remove leituras relacionadas (pra não quebrar FK)
             var leituras = _db.Leituras.Where(l => l.MangaId == mangaId).ToList();
             if (leituras.Count > 0)
                 _db.Leituras.RemoveRange(leituras);
@@ -266,8 +310,12 @@ namespace MangaTracker.Api.Services
         {
             if (_usuarioAtualId == Guid.Empty) return new List<(Manga, Leitura)>();
 
-            var leituras = _db.Leituras.Where(l => l.UsuarioId == _usuarioAtualId).ToList();
-            var catalogo = _db.Catalogo.ToDictionary(m => m.Id, m => m);
+            var leituras = _db.Leituras.AsNoTracking()
+                .Where(l => l.UsuarioId == _usuarioAtualId)
+                .ToList();
+
+            var catalogo = _db.Catalogo.AsNoTracking()
+                .ToDictionary(m => m.Id, m => m);
 
             return leituras
                 .Where(l => catalogo.ContainsKey(l.MangaId))

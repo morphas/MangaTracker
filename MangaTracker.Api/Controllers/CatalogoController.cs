@@ -15,9 +15,67 @@ namespace MangaTracker.Api.Controllers
             _service = service;
         }
 
-        // DTOs (somente campos que você quer usar agora)
+        // DTOs (cadastro/edição rápida)
         public record CadastrarMangaDto(string Titulo, bool LancadoNoBrasil, string? Editora);
         public record AtualizarMangaDto(string Titulo, bool LancadoNoBrasil, string? Editora);
+
+        // DTO (detalhes avançados - admin)
+        public record AtualizarMangaDetalhesDto(
+            string? CapaUrl,
+            string? Descricao,
+            string? Demografia,
+            string? Autor,
+            int? AnoLancamentoOriginal,
+            int? AnoLancamentoBrasil
+        );
+
+        // ========= Helpers =========
+        private bool TrySetAdmin(Guid? userId, out IActionResult? erro)
+        {
+            erro = null;
+
+            if (userId is null)
+            {
+                erro = Unauthorized(new { erro = "Usuário não informado no header X-User-Id." });
+                return false;
+            }
+
+            if (!_service.DefinirUsuarioAtual(userId.Value))
+            {
+                erro = Unauthorized(new { erro = "Usuário não encontrado." });
+                return false;
+            }
+
+            var usuarioLogado = _service.ObterUsuarioLogado();
+            if (usuarioLogado is null)
+            {
+                erro = Unauthorized(new { erro = "Faça login como admin." });
+                return false;
+            }
+
+            if (!usuarioLogado.EhAdmin)
+            {
+                erro = StatusCode(403, new { erro = "Apenas administradores podem executar esta ação." });
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool UrlValida(string? url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return true; // opcional
+            return Uri.TryCreate(url.Trim(), UriKind.Absolute, out var u)
+                   && (u.Scheme == Uri.UriSchemeHttp || u.Scheme == Uri.UriSchemeHttps);
+        }
+
+        private static bool AnoValido(int? ano)
+        {
+            if (!ano.HasValue) return true; // opcional
+            var a = ano.Value;
+            var max = DateTime.Now.Year + 1; // tolera "ano que vem"
+            return a >= 1900 && a <= max;
+        }
 
         // =========================
         // GET: api/catalogo
@@ -73,27 +131,13 @@ namespace MangaTracker.Api.Controllers
         // POST: api/catalogo (admin)
         // =========================
         [HttpPost]
-        public ActionResult<Manga> Post(
+        public IActionResult Post(
             [FromHeader(Name = "X-User-Id")] Guid? userId,
             [FromBody] CadastrarMangaDto dto)
         {
-            // Header obrigatório
-            if (userId is null)
-                return Unauthorized(new { erro = "Usuário não informado no header X-User-Id." });
+            if (!TrySetAdmin(userId, out var erro))
+                return erro!;
 
-            // Define usuário atual no service
-            if (!_service.DefinirUsuarioAtual(userId.Value))
-                return Unauthorized(new { erro = "Usuário não encontrado." });
-
-            // Confere login + admin
-            var usuarioLogado = _service.ObterUsuarioLogado();
-            if (usuarioLogado is null)
-                return Unauthorized(new { erro = "Faça login como admin para cadastrar mangás." });
-
-            if (!usuarioLogado.EhAdmin)
-                return StatusCode(403, new { erro = "Apenas administradores podem cadastrar mangás." });
-
-            // Valida DTO
             if (dto is null || string.IsNullOrWhiteSpace(dto.Titulo))
                 return BadRequest(new { erro = "Título é obrigatório." });
 
@@ -117,26 +161,16 @@ namespace MangaTracker.Api.Controllers
         }
 
         // =========================
-        // PUT: api/catalogo/{id} (admin)
+        // PUT: api/catalogo/{id} (admin) - edição rápida
         // =========================
         [HttpPut("{id:guid}")]
-        public ActionResult<Manga> Put(
+        public IActionResult Put(
             [FromHeader(Name = "X-User-Id")] Guid? userId,
             Guid id,
             [FromBody] AtualizarMangaDto dto)
         {
-            if (userId is null)
-                return Unauthorized(new { erro = "Usuário não informado no header X-User-Id." });
-
-            if (!_service.DefinirUsuarioAtual(userId.Value))
-                return Unauthorized(new { erro = "Usuário não encontrado." });
-
-            var usuarioLogado = _service.ObterUsuarioLogado();
-            if (usuarioLogado is null)
-                return Unauthorized(new { erro = "Faça login como admin." });
-
-            if (!usuarioLogado.EhAdmin)
-                return StatusCode(403, new { erro = "Apenas administradores podem editar mangás." });
+            if (!TrySetAdmin(userId, out var erro))
+                return erro!;
 
             if (dto is null || string.IsNullOrWhiteSpace(dto.Titulo))
                 return BadRequest(new { erro = "Título é obrigatório." });
@@ -162,6 +196,53 @@ namespace MangaTracker.Api.Controllers
         }
 
         // =========================
+        // PUT: api/catalogo/{id}/detalhes (admin) - detalhes avançados
+        // =========================
+        [HttpPut("{id:guid}/detalhes")]
+        public IActionResult PutDetalhes(
+            [FromHeader(Name = "X-User-Id")] Guid? userId,
+            Guid id,
+            [FromBody] AtualizarMangaDetalhesDto dto)
+        {
+            if (!TrySetAdmin(userId, out var erro))
+                return erro!;
+
+            if (dto is null)
+                return BadRequest(new { erro = "Body inválido." });
+
+            if (!UrlValida(dto.CapaUrl))
+                return BadRequest(new { erro = "CapaUrl inválida. Use um link http/https." });
+
+            if (!AnoValido(dto.AnoLancamentoOriginal) || !AnoValido(dto.AnoLancamentoBrasil))
+                return BadRequest(new { erro = "Ano inválido (use entre 1900 e ano atual + 1)." });
+
+            // Se quiser obrigar AnoLancamentoBrasil quando LancadoNoBrasil = true,
+            // isso é regra de negócio (pode ser no service). Por enquanto deixo opcional.
+
+            try
+            {
+                // ✅ IMPORTANTE:
+                // Este método precisa existir no service.
+                // No próximo passo eu te passo exatamente como criar no IBibliotecaService e no BibliotecaServiceDb.
+                var manga = _service.AtualizarDetalhesManga(
+                    id,
+                    dto.CapaUrl?.Trim(),
+                    dto.Descricao?.Trim(),
+                    dto.Demografia?.Trim(),
+                    dto.Autor?.Trim(),
+                    dto.AnoLancamentoOriginal,
+                    dto.AnoLancamentoBrasil
+                );
+
+                return Ok(manga);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { erro = ex.Message });
+            }
+        }
+
+        // =========================
         // DELETE: api/catalogo/{id} (admin)
         // =========================
         [HttpDelete("{id:guid}")]
@@ -169,18 +250,8 @@ namespace MangaTracker.Api.Controllers
             [FromHeader(Name = "X-User-Id")] Guid? userId,
             Guid id)
         {
-            if (userId is null)
-                return Unauthorized(new { erro = "Usuário não informado no header X-User-Id." });
-
-            if (!_service.DefinirUsuarioAtual(userId.Value))
-                return Unauthorized(new { erro = "Usuário não encontrado." });
-
-            var usuarioLogado = _service.ObterUsuarioLogado();
-            if (usuarioLogado is null)
-                return Unauthorized(new { erro = "Faça login como admin." });
-
-            if (!usuarioLogado.EhAdmin)
-                return StatusCode(403, new { erro = "Apenas administradores podem excluir mangás." });
+            if (!TrySetAdmin(userId, out var erro))
+                return erro!;
 
             try
             {

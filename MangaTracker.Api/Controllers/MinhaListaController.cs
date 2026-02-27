@@ -80,7 +80,7 @@ namespace MangaTracker.Api.Controllers
                 return erro!;
 
             if (!Enum.IsDefined(typeof(StatusLeitura), status))
-                return BadRequest(new { erro = "Status inválido. Use 1, 2 ou 3." });
+                return BadRequest(new { erro = "Status inválido. Use 1, 2, 3 ou 4." });
 
             var st = (StatusLeitura)status;
 
@@ -113,7 +113,7 @@ namespace MangaTracker.Api.Controllers
                 return BadRequest(new { erro = "MangaId é obrigatório." });
 
             if (!Enum.IsDefined(typeof(StatusLeitura), dto.Status))
-                return BadRequest(new { erro = "Status inválido. Use 1, 2 ou 3." });
+                return BadRequest(new { erro = "Status inválido. Use 1, 2, 3 ou 4." });
 
             var status = (StatusLeitura)dto.Status;
 
@@ -145,7 +145,7 @@ namespace MangaTracker.Api.Controllers
             if (dto.Status.HasValue)
             {
                 if (!Enum.IsDefined(typeof(StatusLeitura), dto.Status.Value))
-                    return BadRequest(new { erro = "Status inválido. Use 1, 2 ou 3." });
+                    return BadRequest(new { erro = "Status inválido. Use 1, 2, 3 ou 4." });
 
                 novoStatus = (StatusLeitura)dto.Status.Value;
             }

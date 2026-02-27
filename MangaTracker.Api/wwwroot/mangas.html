@@ -1,0 +1,450 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MangaTracker - Mangás</title>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #0f0f0f;
+            color: white;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 24px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: #151515;
+            border: 1px solid #222;
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 14px 35px rgba(0,0,0,0.5);
+        }
+
+        h1 {
+            margin: 0 0 6px 0;
+        }
+
+        p {
+            margin: 0 0 16px 0;
+            color: #cfcfcf;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 220px 220px;
+            gap: 12px;
+            margin-top: 14px;
+            align-items: end;
+        }
+
+        label {
+            display: block;
+            margin: 0 0 6px 0;
+            color: #bdbdbd;
+            font-size: .95em;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #2a2a2a;
+            background: #0f0f0f;
+            color: white;
+            box-sizing: border-box;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        button {
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid #2a2a2a;
+            background: #1b1b1b;
+            color: white;
+            cursor: pointer;
+            font-weight: 800;
+        }
+
+            button:hover {
+                background: #222;
+            }
+
+        .btn-primary {
+            background: #e50914;
+            border-color: #e50914 !important;
+        }
+
+            .btn-primary:hover {
+                background: #ff1a1a;
+                border-color: #ff1a1a !important;
+            }
+
+        .muted {
+            color: #aaa;
+        }
+
+        .warn {
+            background: #111;
+            border: 1px solid #2a2a2a;
+            padding: 12px 14px;
+            border-radius: 14px;
+            color: #d6d6d6;
+            margin: 14px 0;
+            display: none;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 16px;
+        }
+
+        .manga {
+            background: #121212;
+            border: 1px solid #2a2a2a;
+            border-radius: 16px;
+            padding: 14px;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .title {
+            font-weight: 900;
+            line-height: 1.2;
+            margin-bottom: 6px;
+        }
+
+        .meta {
+            color: #8c8c8c;
+            font-size: .9em;
+            line-height: 1.35;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            border: 1px solid #2a2a2a;
+            background: #0f0f0f;
+            color: #ddd;
+            font-weight: 800;
+            font-size: .8em;
+            margin-top: 8px;
+        }
+
+        .rightCol {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-end;
+            min-width: 160px;
+        }
+
+        .small {
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: .95em;
+            white-space: nowrap;
+        }
+
+        .ok {
+            border-color: #2f6;
+            color: #2f6;
+            background: rgba(34,255,102,.08);
+        }
+
+        @media (max-width: 900px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .rightCol {
+                min-width: unset;
+                align-items: stretch;
+            }
+
+            .small {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar compartilhada -->
+    <div id="navbarHost"></div>
+
+    <div class="container">
+        <div class="card">
+            <h1>📚 Mangás</h1>
+            <p>Explore o catálogo e adicione no seu perfil de leitura.</p>
+
+            <div class="controls">
+                <div>
+                    <label>Buscar</label>
+                    <input id="q" type="text" placeholder="Ex: naruto, chainsaw, one..." />
+                </div>
+
+                <div>
+                    <label>Filtro BR</label>
+                    <select id="fBR">
+                        <option value="">Todos</option>
+                        <option value="true">Lançado no Brasil</option>
+                        <option value="false">Não lançado no Brasil</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Status ao adicionar</label>
+                    <select id="statusAdd">
+                        <option value="1">Pretendo ler</option>
+                        <option value="2" selected>Lendo</option>
+                        <option value="3">Concluído</option>
+                        <option value="4">Pretendo comprar</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="btnBuscar">Buscar</button>
+                <button id="btnTodos">Todos</button>
+                <span class="muted" id="count">—</span>
+            </div>
+
+            <div class="warn" id="warnBox"></div>
+
+            <div class="grid" id="listaBox"></div>
+        </div>
+    </div>
+
+    <script src="shared/navbar.js"></script>
+    <script>
+    // Navbar igual às outras páginas
+    if (typeof mountNavbar === 'function') mountNavbar();
+
+    // ===== Helpers =====
+    function getUsuarioLogado() {
+      try { return JSON.parse(localStorage.getItem('usuarioLogado')); }
+      catch {
+        localStorage.removeItem('usuarioLogado');
+        return null;
+      }
+    }
+
+    async function apiFetch(url, options = {}) {
+      const u = getUsuarioLogado();
+      const headers = options.headers ? { ...options.headers } : {};
+      if (u?.id) headers['X-User-Id'] = u.id;
+      return fetch(url, { ...options, headers });
+    }
+
+    function showWarn(msg) {
+      const box = document.getElementById('warnBox');
+      box.style.display = 'block';
+      box.textContent = msg;
+    }
+
+    function hideWarn() {
+      const box = document.getElementById('warnBox');
+      box.style.display = 'none';
+      box.textContent = '';
+    }
+
+    function setCount(txt) {
+      document.getElementById('count').textContent = txt;
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    // ===== Estado local (pra já marcar "Na minha lista" sem ficar chamando API toda hora) =====
+    let minhaListaIds = new Set();
+
+    async function carregarMinhaListaIds() {
+      minhaListaIds = new Set();
+      const u = getUsuarioLogado();
+      if (!u?.id) return;
+
+      try {
+        const res = await apiFetch('/api/minhalista');
+        const dados = await res.json().catch(() => ([]));
+        if (!res.ok) return;
+
+        (Array.isArray(dados) ? dados : []).forEach(x => {
+          if (x?.mangaId) minhaListaIds.add(String(x.mangaId).toLowerCase());
+        });
+      } catch { /* ignora */ }
+    }
+
+    // ===== Catálogo =====
+    async function carregarCatalogo() {
+      hideWarn();
+
+      const box = document.getElementById('listaBox');
+      box.innerHTML = `<div class="muted">Carregando...</div>`;
+      setCount('Carregando...');
+
+      const q = document.getElementById('q').value.trim();
+      const fBR = document.getElementById('fBR').value; // "", "true", "false"
+
+      const params = new URLSearchParams();
+      if (q) params.set('q', q);
+      if (fBR) params.set('lancadoNoBrasil', fBR);
+
+      const url = params.toString() ? `/api/catalogo?${params.toString()}` : `/api/catalogo`;
+
+      try {
+        const res = await apiFetch(url);
+        const dados = await res.json().catch(() => ([]));
+
+        if (!res.ok) {
+          box.innerHTML = '';
+          showWarn(dados?.erro || 'Erro ao carregar catálogo.');
+          setCount('—');
+          return;
+        }
+
+        const lista = (Array.isArray(dados) ? dados : [])
+          .sort((a, b) => (a.titulo || '').localeCompare(b.titulo || '', 'pt-BR', { sensitivity: 'base' }));
+
+        if (lista.length === 0) {
+          box.innerHTML = `<div class="muted">Nenhum resultado.</div>`;
+          setCount('0 resultado(s)');
+          return;
+        }
+
+        setCount(`${lista.length} resultado(s)`);
+
+        box.innerHTML = lista.map(m => {
+          const id = String(m.id || '');
+          const jaNaLista = minhaListaIds.has(id.toLowerCase());
+
+          return `
+            <div class="manga">
+              <div style="min-width:0;">
+                <div class="title">${escapeHtml(m.titulo || '—')}</div>
+                <div class="meta">
+                  Lançado BR: <b>${m.lancadoNoBrasil ? 'Sim' : 'Não'}</b><br/>
+                  Editora: <b>${escapeHtml(m.editora || '—')}</b>
+                </div>
+                ${m.lancadoNoBrasil ? `<div class="pill">🇧🇷 Catálogo BR</div>` : ``}
+              </div>
+
+              <div class="rightCol">
+                ${
+                  jaNaLista
+                  ? `<button class="small ok" disabled>✅ Na minha lista</button>`
+                  : `<button class="small btn-primary" onclick="adicionarNaMinhaLista('${id}', '${escapeHtml(m.titulo || '')}')">+ Minha Lista</button>`
+                }
+                <button class="small" onclick="irParaMinhaLista()">Ver minha lista</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+      } catch {
+        box.innerHTML = '';
+        showWarn('Erro ao conectar com a API.');
+        setCount('—');
+      }
+    }
+
+    function irParaMinhaLista() {
+      window.location.href = 'minha-lista.html';
+    }
+
+    async function adicionarNaMinhaLista(mangaId, titulo) {
+      hideWarn();
+
+      const u = getUsuarioLogado();
+      if (!u?.id) {
+        alert('Você precisa fazer login para adicionar na sua lista.');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const status = parseInt(document.getElementById('statusAdd').value, 10);
+
+      try {
+        const res = await apiFetch('/api/minhalista', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            mangaId: mangaId,
+            status: status,
+            capituloAtual: status === 1 ? 0 : 0
+          })
+        });
+
+        const dados = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          showWarn(dados?.erro || 'Erro ao adicionar na sua lista.');
+          return;
+        }
+
+        // Marca localmente e atualiza UI
+        minhaListaIds.add(String(mangaId).toLowerCase());
+        await carregarCatalogo();
+
+      } catch {
+        showWarn('Erro ao conectar com a API.');
+      }
+    }
+
+    // ===== Eventos =====
+    let debounceTimer = null;
+
+    document.getElementById('q').addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => carregarCatalogo(), 350);
+    });
+
+    document.getElementById('btnBuscar').addEventListener('click', carregarCatalogo);
+
+    document.getElementById('btnTodos').addEventListener('click', async () => {
+      document.getElementById('q').value = '';
+      document.getElementById('fBR').value = '';
+      await carregarMinhaListaIds();
+      await carregarCatalogo();
+    });
+
+    document.getElementById('fBR').addEventListener('change', carregarCatalogo);
+
+    // ===== Start =====
+    (async () => {
+      await carregarMinhaListaIds();
+      await carregarCatalogo();
+    })();
+    </script>
+</body>
+</html>

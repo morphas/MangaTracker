@@ -16,6 +16,8 @@ namespace MangaTracker.Services
         Manga CadastrarNoCatalogo(string titulo, bool lancadoNoBrasil, string? editora);
         void DefinirTotalCapitulos(Guid mangaId, int? totalCapitulos);
         Manga AtualizarMangaDoCatalogo(Guid mangaId, string titulo, bool lancadoNoBrasil, string? editora);
+
+        Manga AtualizarDetalhesManga( Guid mangaId, string? capaUrl, string? descricao, string? demografia, string? autor, int? anoLancamentoOriginal, int? anoLancamentoBrasil);
         void RemoverMangaDoCatalogo(Guid mangaId);
 
         // =========================
@@ -25,29 +27,22 @@ namespace MangaTracker.Services
         bool EstaNaMinhaLista(Guid mangaId);
         void AdicionarNaMinhaLista(Guid mangaId, StatusLeitura status, int? capituloAtual = null);
         void AtualizarLeitura(Guid mangaId, int capituloAtual, StatusLeitura? status = null);
+        void RemoverDaMinhaLista(Guid mangaId);
 
         // =========================
         // USUÁRIOS
         // =========================
-        // Este é o método principal que o seu Controller usa para checar se você é Admin
         Usuario? ObterUsuarioLogado();
-
         IReadOnlyList<Usuario> ListarUsuarios();
         bool DefinirUsuarioAtual(Guid usuarioId);
+        Usuario ValidarLogin(string identificador, string senha);
 
         // =========================
-        // PERSISTÊNCIA (JSON)
+        // PERSISTÊNCIA (compat)
         // =========================
         void CarregarDados();
         void SalvarDados();
         string CaminhoDoArquivoDeDados();
-
         void CadastrarNovoUsuario(string nome, string email, string senha);
-
-        void RemoverDaMinhaLista(Guid mangaId);
-
-        // ADICIONE ESTA LINHA ABAIXO:
-        Usuario ValidarLogin(string identificador, string senha);
     }
 }
-    

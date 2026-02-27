@@ -13,58 +13,6 @@
             margin: 0;
         }
 
-        /* ====== NAVBAR ====== */
-        .navbar {
-            background: #000;
-            padding: 16px 50px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 3px solid #e50914;
-        }
-
-        .logo {
-            font-size: 1.5em;
-            font-weight: 800;
-            text-decoration: none;
-            color: white;
-            letter-spacing: .5px;
-        }
-
-            .logo span {
-                color: #e50914;
-            }
-
-        .menu {
-            display: flex;
-            gap: 14px;
-            align-items: center;
-        }
-
-            .menu a {
-                color: white;
-                text-decoration: none;
-                font-weight: 700;
-                padding: 10px 14px;
-                border-radius: 10px;
-                border: 1px solid transparent;
-            }
-
-                .menu a:hover {
-                    background: #151515;
-                    border-color: #2a2a2a;
-                }
-
-        .btn-primary {
-            background: #e50914;
-            border-color: #e50914 !important;
-        }
-
-            .btn-primary:hover {
-                background: #ff1a1a;
-                border-color: #ff1a1a !important;
-            }
-
         /* ====== LAYOUT ====== */
         .container {
             max-width: 1200px;
@@ -197,84 +145,8 @@
             white-space: nowrap;
         }
 
-        /* ====== Dropdown do usuário (usado pela navbar compartilhada) ====== */
-        .userbox {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-        }
-
-        .userbtn {
-            background: transparent;
-            color: white;
-            border: 1px solid #2a2a2a;
-            padding: 10px 14px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 800;
-        }
-
-            .userbtn:hover {
-                background: #151515;
-            }
-
-        .badge-admin {
-            font-size: 0.75em;
-            padding: 2px 8px;
-            border-radius: 999px;
-            border: 1px solid #e50914;
-            color: #e50914;
-            margin-left: 8px;
-        }
-
-        .dropdown {
-            position: absolute;
-            right: 0;
-            top: 48px;
-            width: 240px;
-            background: #0f0f0f;
-            border: 1px solid #2a2a2a;
-            border-radius: 14px;
-            padding: 8px;
-            display: none;
-            box-shadow: 0 14px 30px rgba(0,0,0,0.6);
-            z-index: 9999;
-        }
-
-            .dropdown a,
-            .dropdown button {
-                width: 100%;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 10px 12px;
-                border-radius: 10px;
-                text-decoration: none;
-                background: transparent;
-                border: none;
-                color: #ddd;
-                cursor: pointer;
-                font-size: 0.95em;
-                box-sizing: border-box;
-            }
-
-                .dropdown a:hover,
-                .dropdown button:hover {
-                    background: #1b1b1b;
-                }
-
-            .dropdown .sep {
-                height: 1px;
-                background: #242424;
-                margin: 6px 0;
-            }
-
         /* responsivo */
         @media (max-width: 980px) {
-            .navbar {
-                padding: 14px 18px;
-            }
-
             .grid {
                 grid-template-columns: 1fr;
             }
@@ -316,7 +188,7 @@
                 <div class="card hero">
                     <h1>Bem-vindo ao MangaTracker Brasil <span style="color:#e50914">BR</span></h1>
                     <p>Organize suas leituras, acompanhe capítulos e descubra os mangás mais populares do Brasil.</p>
-                    <a class="cta" href="cadastro.html">Criar Conta Gratuitamente</a>
+                    <div id="heroCta"></div>
                 </div>
 
                 <div class="card">
@@ -375,10 +247,30 @@
         </div>
     </div>
 
-    <!-- ✅ Importa e monta a navbar compartilhada -->
+    <!-- ✅ Importa navbar compartilhada -->
     <script src="shared/navbar.js"></script>
     <script>
-        // ======= Tabelas da direita (mock por enquanto) =======
+        // Navbar
+        if (typeof mountNavbar === "function") mountNavbar();
+
+        function getUsuarioLogado() {
+            try { return JSON.parse(localStorage.getItem('usuarioLogado')); }
+            catch { return null; }
+        }
+
+        function renderHeroCta() {
+            const wrap = document.getElementById('heroCta');
+            if (!wrap) return;
+
+            const u = getUsuarioLogado();
+
+            if (!u) {
+                wrap.innerHTML = `<a class="cta" href="cadastro.html">Criar Conta Gratuitamente</a>`;
+            } else {
+                wrap.innerHTML = `<a class="cta" href="minha-lista.html">Ir para Minha Lista</a>`;
+            }
+        }
+
         function renderTopsFixos() {
             const lancamentos = [
                 { titulo: "Frieren (Edição BR)", info: "Chegando às bancas", badge: "Novo" },
@@ -399,37 +291,39 @@
             const topLanc = document.getElementById('topLancamentos');
             const topLidos = document.getElementById('topMaisLidos');
 
-            topLanc.innerHTML = lancamentos.map((m, i) => `
-                <div class="row">
-                    <div class="row-left">
-                        <span class="rank">${i + 1}</span>
-                        <div style="min-width:0;">
-                            <div class="name">${m.titulo}</div>
-                            <div class="meta">${m.info}</div>
+            if (topLanc) {
+                topLanc.innerHTML = lancamentos.map((m, i) => `
+                        <div class="row">
+                            <div class="row-left">
+                                <span class="rank">${i + 1}</span>
+                                <div style="min-width:0;">
+                                    <div class="name">${m.titulo}</div>
+                                    <div class="meta">${m.info}</div>
+                                </div>
+                            </div>
+                            <div class="right">${m.badge}</div>
                         </div>
-                    </div>
-                    <div class="right">${m.badge}</div>
-                </div>
-            `).join('');
+                    `).join('');
+            }
 
-            topLidos.innerHTML = maisLidos.map((m, i) => `
-                <div class="row">
-                    <div class="row-left">
-                        <span class="rank">${i + 1}</span>
-                        <div style="min-width:0;">
-                            <div class="name">${m.titulo}</div>
-                            <div class="meta">${m.info}</div>
+            if (topLidos) {
+                topLidos.innerHTML = maisLidos.map((m, i) => `
+                        <div class="row">
+                            <div class="row-left">
+                                <span class="rank">${i + 1}</span>
+                                <div style="min-width:0;">
+                                    <div class="name">${m.titulo}</div>
+                                    <div class="meta">${m.info}</div>
+                                </div>
+                            </div>
+                            <div class="right">${m.badge}</div>
                         </div>
-                    </div>
-                    <div class="right">${m.badge}</div>
-                </div>
-            `).join('');
+                    `).join('');
+            }
         }
 
-        // ✅ monta a navbar padrão (mesma em todas as páginas)
-        mountNavbar();
-
-        // resto da home
+        // Start
+        renderHeroCta();
         renderTopsFixos();
     </script>
 </body>

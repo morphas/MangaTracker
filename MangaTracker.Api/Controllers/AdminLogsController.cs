@@ -16,12 +16,23 @@ namespace MangaTracker.Api.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetLogs()
+        public IActionResult Get()
         {
             var logs = _db.AdminLogs
+                .AsNoTracking()
                 .OrderByDescending(l => l.CriadoEm)
                 .Take(100)
-                .AsNoTracking()
+                .Select(l => new
+                {
+                    acao = l.Acao,
+                    detalhes = l.Detalhes,
+                    criadoEm = l.CriadoEm,
+                    adminId = l.AdminId,
+                    admin = _db.Usuarios
+                        .Where(u => u.Id == l.AdminId)
+                        .Select(u => u.Nome)
+                        .FirstOrDefault() ?? "—"
+                })
                 .ToList();
 
             return Ok(logs);

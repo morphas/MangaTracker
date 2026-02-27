@@ -173,6 +173,7 @@
         </button>
 
         <div class="dropdown" id="userDropdown">
+          <a href="mangas.html">📖 Mangás <span>›</span></a>
           <a href="minha-lista.html">📚 Minha Lista <span>›</span></a>
           <a href="#" id="perfilBtn">👤 Perfil (em breve) <span>›</span></a>
 

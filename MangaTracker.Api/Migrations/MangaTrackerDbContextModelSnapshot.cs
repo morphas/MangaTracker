@@ -22,36 +22,6 @@ namespace MangaTracker.Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Manga", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CriadoEm")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Editora")
-                        .HasColumnType("text");
-
-                    b.Property<string>("EditoraKey")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("LancadoNoBrasil")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Titulo")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int?>("TotalCapitulos")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Catalogo");
-                });
-
             modelBuilder.Entity("MangaTracker.Models.AdminLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -99,6 +69,54 @@ namespace MangaTracker.Api.Migrations
                     b.HasKey("UsuarioId", "MangaId");
 
                     b.ToTable("Leituras");
+                });
+
+            modelBuilder.Entity("MangaTracker.Models.Manga", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("AnoLancamentoBrasil")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("AnoLancamentoOriginal")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Autor")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CapaUrl")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Demografia")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Descricao")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Editora")
+                        .HasColumnType("text");
+
+                    b.Property<string>("EditoraKey")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("LancadoNoBrasil")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("TotalCapitulos")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Catalogo");
                 });
 
             modelBuilder.Entity("MangaTracker.Models.Usuario", b =>

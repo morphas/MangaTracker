@@ -1,4 +1,3 @@
 <Solution>
   <Project Path="MangaTracker.Api/MangaTracker.Api.csproj" Id="8543d44b-a8c8-4eaa-800a-3979e9b601b1" />
-  <Project Path="MangaTracker/MangaTracker.csproj" />
 </Solution>

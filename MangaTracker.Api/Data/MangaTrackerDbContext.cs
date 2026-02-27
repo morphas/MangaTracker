@@ -7,30 +7,49 @@ namespace MangaTracker.Api.Data
     {
         public MangaTrackerDbContext(DbContextOptions<MangaTrackerDbContext> options) : base(options) { }
 
-        // Suas tabelas no banco de dados
-        public DbSet<Manga> Catalogo { get; set; }
-        public DbSet<Usuario> Usuarios { get; set; }
-        public DbSet<Leitura> Leituras { get; set; }
-
-        public DbSet<AdminLog> AdminLogs => Set<AdminLog>();
+        public DbSet<Manga> Catalogo { get; set; } = null!;
+        public DbSet<Usuario> Usuarios { get; set; } = null!;
+        public DbSet<Leitura> Leituras { get; set; } = null!;
+        public DbSet<AdminLog> AdminLogs { get; set; } = null!;
+        public DbSet<Editora> Editoras { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Configuração da chave composta para a tabela de Leitura
+            // ✅ Leitura (chave composta)
             modelBuilder.Entity<Leitura>()
                 .HasKey(l => new { l.UsuarioId, l.MangaId });
 
-            base.OnModelCreating(modelBuilder);
-        }
+            // ✅ AdminLog
+            modelBuilder.Entity<AdminLog>()
+                .HasKey(a => a.Id);
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            // Se o banco não estiver configurado (comum quando rodamos o comando no terminal),
-            // a gente define uma string temporária apenas para a ferramenta não travar.
-            if (!optionsBuilder.IsConfigured)
+            // ✅ Editora (tabela + regras)
+            modelBuilder.Entity<Editora>(e =>
             {
-                optionsBuilder.UseNpgsql("Host=localhost;Database=temp;Username=postgres;Password=pass");
-            }
+                e.ToTable("Editoras");
+                e.HasKey(x => x.Id);
+
+                e.Property(x => x.Nome)
+                    .HasMaxLength(120)
+                    .IsRequired();
+
+                // ⚠️ Aqui era "NomeKey" no seu DbContext, mas no seu model é "Key"
+                e.Property(x => x.Key)
+                    .HasMaxLength(60)
+                    .IsRequired();
+
+                e.HasIndex(x => x.Key)
+                    .IsUnique();
+            });
+
+            // ✅ Relacionamento: Manga -> Editora (FK opcional)
+            modelBuilder.Entity<Manga>()
+                .HasOne(m => m.EditoraNav)
+                .WithMany()
+                .HasForeignKey(m => m.EditoraId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            base.OnModelCreating(modelBuilder);
         }
     }
 }

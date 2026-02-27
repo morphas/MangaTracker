@@ -4,6 +4,7 @@
     {
         PretendoLer = 1,
         Lendo = 2,
-        Concluido = 3
+        Concluido = 3,
+        PretendoComprar = 4
     }
 }

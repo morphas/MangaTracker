@@ -681,13 +681,16 @@
                 status.textContent = `${logs.length} registro(s)`;
 
                 list.innerHTML = logs.map(l => `
-                        <div class="row">
-                            <div style="min-width:0;">
-                                <div class="title">${escapeHtml(l.acao || '—')} — ${escapeHtml(l.mangaTitulo || '—')}</div>
-                                <div class="meta">${formatarDataBr(l.data)} • Admin: ${escapeHtml(l.admin || '—')}</div>
-                            </div>
-                        </div>
-                    `).join('');
+                  <div class="row">
+                    <div style="min-width:0;">
+                      <div class="title">${escapeHtml(l.acao || '—')}</div>
+                      <div class="meta">
+                        ${formatarDataBr(l.criadoEm)} • Admin: ${escapeHtml(l.admin || '—')}
+                      </div>
+                      ${l.detalhes ? `<div class="meta">Detalhes: ${escapeHtml(l.detalhes)}</div>` : ``}
+                 </div>
+                 </div>
+                `).join('');
 
             } catch {
                 status.textContent = 'Offline';
