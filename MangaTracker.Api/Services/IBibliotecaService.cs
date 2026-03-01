@@ -4,21 +4,49 @@ using MangaTracker.Models;
 
 namespace MangaTracker.Services
 {
+    // Resultado paginado genérico
+    public record PagedResult<T>(IReadOnlyList<T> Items, int Total, int Page, int PageSize);
+
     public interface IBibliotecaService
     {
         // =========================
         // CATÁLOGO
         // =========================
         IReadOnlyList<Manga> ListarCatalogo();
+        PagedResult<Manga> ListarCatalogoPaginado(bool? lancadoNoBrasil, Guid? editoraId, string? q, int page, int pageSize);
+
         Manga? BuscarMangaPorId(Guid id);
         Manga? BuscarMangaPorTitulo(string titulo);
         bool MangaExisteNoCatalogo(string titulo);
-        Manga CadastrarNoCatalogo(string titulo, bool lancadoNoBrasil, string? editora);
-        void DefinirTotalCapitulos(Guid mangaId, int? totalCapitulos);
-        Manga AtualizarMangaDoCatalogo(Guid mangaId, string titulo, bool lancadoNoBrasil, string? editora);
 
-        Manga AtualizarDetalhesManga( Guid mangaId, string? capaUrl, string? descricao, string? demografia, string? autor, int? anoLancamentoOriginal, int? anoLancamentoBrasil);
+        Manga CadastrarNoCatalogo(string titulo, bool lancadoNoBrasil, Guid? editoraId);
+
+        Manga AtualizarMangaDoCatalogo(Guid mangaId, string titulo, bool lancadoNoBrasil, Guid? editoraId);
+
+        Manga AtualizarDetalhesManga(
+            Guid mangaId,
+            string? capaUrl,
+            string? descricao,
+            string? demografia,
+            string? autor,
+            int? anoLancamentoOriginal,
+            int? anoLancamentoBrasil
+        );
+
         void RemoverMangaDoCatalogo(Guid mangaId);
+
+        void DefinirTotalCapitulos(Guid mangaId, int? totalCapitulos);
+
+        // =========================
+        // EDITORAS
+        // =========================
+        IReadOnlyList<Editora> ListarEditoras();
+        Editora? BuscarEditoraPorId(Guid id);
+        Editora CriarEditora(string nome, string? descricao);
+        Editora AtualizarEditora(Guid id, string nome, string? descricao);
+
+        // Regra: NÃO pode excluir se houver mangá vinculado
+        void RemoverEditora(Guid id);
 
         // =========================
         // MINHA LISTA (LEITURAS)
@@ -36,6 +64,7 @@ namespace MangaTracker.Services
         IReadOnlyList<Usuario> ListarUsuarios();
         bool DefinirUsuarioAtual(Guid usuarioId);
         Usuario ValidarLogin(string identificador, string senha);
+        void CadastrarNovoUsuario(string nome, string email, string senha);
 
         // =========================
         // PERSISTÊNCIA (compat)
@@ -43,6 +72,5 @@ namespace MangaTracker.Services
         void CarregarDados();
         void SalvarDados();
         string CaminhoDoArquivoDeDados();
-        void CadastrarNovoUsuario(string nome, string email, string senha);
     }
 }

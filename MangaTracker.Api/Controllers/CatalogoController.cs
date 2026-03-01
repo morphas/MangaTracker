@@ -16,8 +16,8 @@ namespace MangaTracker.Api.Controllers
         }
 
         // DTOs (cadastro/edição rápida)
-        public record CadastrarMangaDto(string Titulo, bool LancadoNoBrasil, string? Editora);
-        public record AtualizarMangaDto(string Titulo, bool LancadoNoBrasil, string? Editora);
+        public record CadastrarMangaDto(string Titulo, bool LancadoNoBrasil, Guid? EditoraId);
+        public record AtualizarMangaDto(string Titulo, bool LancadoNoBrasil, Guid? EditoraId);
 
         // DTO (detalhes avançados - admin)
         public record AtualizarMangaDetalhesDto(
@@ -78,53 +78,76 @@ namespace MangaTracker.Api.Controllers
         }
 
         // =========================
-        // GET: api/catalogo
+        // GET: api/catalogo (PAGINADO)
         // Filtros:
         // ?lancadoNoBrasil=true|false
-        // ?editora=panini
+        // ?editoraId=<GUID>
         // ?q=jujutsu
+        // ?page=1&pageSize=20
         // =========================
         [HttpGet]
-        public ActionResult<IEnumerable<Manga>> Get(
+        public IActionResult Get(
             [FromQuery] bool? lancadoNoBrasil,
-            [FromQuery] string? editora,
-            [FromQuery] string? q)
+            [FromQuery] Guid? editoraId,
+            [FromQuery] string? q,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 20)
         {
-            var lista = _service.ListarCatalogo().AsQueryable();
+            var result = _service.ListarCatalogoPaginado(lancadoNoBrasil, editoraId, q, page, pageSize);
 
-            if (lancadoNoBrasil.HasValue)
-                lista = lista.Where(m => m.LancadoNoBrasil == lancadoNoBrasil.Value);
-
-            if (!string.IsNullOrWhiteSpace(editora))
+            // devolve já com editoraNome (pra o admin.html mostrar bonito)
+            var items = result.Items.Select(m => new
             {
-                var key = editora.Trim().ToLowerInvariant();
-                lista = lista.Where(m => m.EditoraKey == key);
-            }
+                id = m.Id,
+                titulo = m.Titulo,
+                totalCapitulos = m.TotalCapitulos,
+                lancadoNoBrasil = m.LancadoNoBrasil,
+                editoraId = m.EditoraId,
+                editoraNome = m.EditoraNav?.Nome,   // ✅ aqui
+                capaUrl = m.CapaUrl,
+                descricao = m.Descricao,
+                demografia = m.Demografia,
+                autor = m.Autor,
+                anoLancamentoOriginal = m.AnoLancamentoOriginal,
+                anoLancamentoBrasil = m.AnoLancamentoBrasil,
+                criadoEm = m.CriadoEm
+            });
 
-            if (!string.IsNullOrWhiteSpace(q))
+            return Ok(new
             {
-                var termo = q.Trim().ToLowerInvariant();
-                lista = lista.Where(m => (m.Titulo ?? "").ToLower().Contains(termo));
-            }
-
-            return Ok(
-                lista
-                    .OrderBy(m => m.Titulo, StringComparer.CurrentCultureIgnoreCase)
-                    .ToList()
-            );
+                items,
+                total = result.Total,
+                page = result.Page,
+                pageSize = result.PageSize
+            });
         }
 
         // =========================
         // GET: api/catalogo/{id}
         // =========================
         [HttpGet("{id:guid}")]
-        public ActionResult<Manga> GetById(Guid id)
+        public IActionResult GetById(Guid id)
         {
             var manga = _service.BuscarMangaPorId(id);
             if (manga is null)
                 return NotFound(new { erro = "Mangá não encontrado." });
 
-            return Ok(manga);
+            return Ok(new
+            {
+                id = manga.Id,
+                titulo = manga.Titulo,
+                totalCapitulos = manga.TotalCapitulos,
+                lancadoNoBrasil = manga.LancadoNoBrasil,
+                editoraId = manga.EditoraId,
+                editoraNome = manga.EditoraNav?.Nome,
+                capaUrl = manga.CapaUrl,
+                descricao = manga.Descricao,
+                demografia = manga.Demografia,
+                autor = manga.Autor,
+                anoLancamentoOriginal = manga.AnoLancamentoOriginal,
+                anoLancamentoBrasil = manga.AnoLancamentoBrasil,
+                criadoEm = manga.CriadoEm
+            });
         }
 
         // =========================
@@ -141,7 +164,7 @@ namespace MangaTracker.Api.Controllers
             if (dto is null || string.IsNullOrWhiteSpace(dto.Titulo))
                 return BadRequest(new { erro = "Título é obrigatório." });
 
-            if (dto.LancadoNoBrasil && string.IsNullOrWhiteSpace(dto.Editora))
+            if (dto.LancadoNoBrasil && (!dto.EditoraId.HasValue || dto.EditoraId.Value == Guid.Empty))
                 return BadRequest(new { erro = "Informe a editora se o mangá for lançado no Brasil." });
 
             try
@@ -149,10 +172,17 @@ namespace MangaTracker.Api.Controllers
                 var manga = _service.CadastrarNoCatalogo(
                     dto.Titulo.Trim(),
                     dto.LancadoNoBrasil,
-                    dto.LancadoNoBrasil ? dto.Editora?.Trim() : null
+                    dto.LancadoNoBrasil ? dto.EditoraId : null
                 );
 
-                return CreatedAtAction(nameof(GetById), new { id = manga.Id }, manga);
+                return CreatedAtAction(nameof(GetById), new { id = manga.Id }, new
+                {
+                    id = manga.Id,
+                    titulo = manga.Titulo,
+                    lancadoNoBrasil = manga.LancadoNoBrasil,
+                    editoraId = manga.EditoraId,
+                    editoraNome = manga.EditoraNav?.Nome
+                });
             }
             catch (Exception ex)
             {
@@ -175,7 +205,7 @@ namespace MangaTracker.Api.Controllers
             if (dto is null || string.IsNullOrWhiteSpace(dto.Titulo))
                 return BadRequest(new { erro = "Título é obrigatório." });
 
-            if (dto.LancadoNoBrasil && string.IsNullOrWhiteSpace(dto.Editora))
+            if (dto.LancadoNoBrasil && (!dto.EditoraId.HasValue || dto.EditoraId.Value == Guid.Empty))
                 return BadRequest(new { erro = "Informe a editora se o mangá for lançado no Brasil." });
 
             try
@@ -184,10 +214,17 @@ namespace MangaTracker.Api.Controllers
                     id,
                     dto.Titulo.Trim(),
                     dto.LancadoNoBrasil,
-                    dto.LancadoNoBrasil ? dto.Editora?.Trim() : null
+                    dto.LancadoNoBrasil ? dto.EditoraId : null
                 );
 
-                return Ok(manga);
+                return Ok(new
+                {
+                    id = manga.Id,
+                    titulo = manga.Titulo,
+                    lancadoNoBrasil = manga.LancadoNoBrasil,
+                    editoraId = manga.EditoraId,
+                    editoraNome = manga.EditoraNav?.Nome
+                });
             }
             catch (Exception ex)
             {
@@ -216,14 +253,8 @@ namespace MangaTracker.Api.Controllers
             if (!AnoValido(dto.AnoLancamentoOriginal) || !AnoValido(dto.AnoLancamentoBrasil))
                 return BadRequest(new { erro = "Ano inválido (use entre 1900 e ano atual + 1)." });
 
-            // Se quiser obrigar AnoLancamentoBrasil quando LancadoNoBrasil = true,
-            // isso é regra de negócio (pode ser no service). Por enquanto deixo opcional.
-
             try
             {
-                // ✅ IMPORTANTE:
-                // Este método precisa existir no service.
-                // No próximo passo eu te passo exatamente como criar no IBibliotecaService e no BibliotecaServiceDb.
                 var manga = _service.AtualizarDetalhesManga(
                     id,
                     dto.CapaUrl?.Trim(),
@@ -234,7 +265,17 @@ namespace MangaTracker.Api.Controllers
                     dto.AnoLancamentoBrasil
                 );
 
-                return Ok(manga);
+                return Ok(new
+                {
+                    id = manga.Id,
+                    titulo = manga.Titulo,
+                    capaUrl = manga.CapaUrl,
+                    descricao = manga.Descricao,
+                    demografia = manga.Demografia,
+                    autor = manga.Autor,
+                    anoLancamentoOriginal = manga.AnoLancamentoOriginal,
+                    anoLancamentoBrasil = manga.AnoLancamentoBrasil
+                });
             }
             catch (Exception ex)
             {
