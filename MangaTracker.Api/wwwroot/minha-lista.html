@@ -476,14 +476,14 @@
 
             if (!u) {
                 wrap.innerHTML = `
-                          <a class="btn-primary" href="cadastro.html">Começar agora gratuitamente</a>
-                          <a class="btn-ghost" href="login.html">Já tenho conta</a>
-                        `;
+                              <a class="btn-primary" href="cadastro.html">Começar agora gratuitamente</a>
+                              <a class="btn-ghost" href="login.html">Já tenho conta</a>
+                            `;
             } else {
                 wrap.innerHTML = `
-                          <a class="btn-primary" href="minha-lista.html">Atualizar minha lista</a>
-                          ${u.isAdmin ? `<a class="btn-ghost" href="admin.html">Admin (Catálogo)</a>` : `<a class="btn-ghost" href="index.html">Voltar para Home</a>`}
-                        `;
+                              <a class="btn-primary" href="minha-lista.html">Atualizar minha lista</a>
+                              ${u.isAdmin ? `<a class="btn-ghost" href="admin.html">Admin (Catálogo)</a>` : `<a class="btn-ghost" href="index.html">Voltar para Home</a>`}
+                            `;
             }
         }
 
@@ -588,38 +588,38 @@
                 st.textContent = `${lista.length} item(ns)`;
 
                 box.innerHTML = `
-                          <div style="display:grid; gap:10px;">
-                            ${lista.map(item => `
-                              <div class="ml-item">
-                                <div style="min-width:0;">
-                                  <div class="ml-title">${item.titulo}</div>
-                                  <div class="ml-meta">
-                                    Status: <b>${statusTexto(item.status)}</b> • Capítulo: <b>${item.capituloAtual}</b>
-                                    ${item.totalCapitulos ? ` / ${item.totalCapitulos}` : ``}
+                              <div style="display:grid; gap:10px;">
+                                ${lista.map(item => `
+                                  <div class="ml-item">
+                                    <div style="min-width:0;">
+                                      <div class="ml-title">${item.titulo}</div>
+                                      <div class="ml-meta">
+                                        Status: <b>${statusTexto(item.status)}</b> • Capítulo: <b>${item.capituloAtual}</b>
+                                        ${item.totalCapitulos ? ` / ${item.totalCapitulos}` : ``}
+                                      </div>
+                                    </div>
+
+                                    <div class="ml-actions">
+                                      <select id="st_${item.mangaId}">
+                                        <option value="1" ${item.status === 1 ? "selected" : ""}>Pretendo ler</option>
+                                        <option value="2" ${item.status === 2 ? "selected" : ""}>Lendo</option>
+                                        <option value="3" ${item.status === 3 ? "selected" : ""}>Concluído</option>
+                                        <option value="4" ${item.status === 4 ? "selected" : ""}>Pretendo comprar</option>
+                                      </select>
+
+                                      <input id="cap_${item.mangaId}" type="number" min="0" value="${item.capituloAtual ?? 0}" />
+
+                                      <button class="btn-save" onclick="salvarProgresso('${item.mangaId}')">Salvar</button>
+
+                                      <button class="btn-danger"
+                                        onclick="removerDaMinhaLista('${item.mangaId}', '${String(item.titulo).replace(/'/g, "\\'")}')">
+                                        Remover
+                                      </button>
+                                    </div>
                                   </div>
-                                </div>
-
-                                <div class="ml-actions">
-                                  <select id="st_${item.mangaId}">
-                                    <option value="1" ${item.status === 1 ? "selected" : ""}>Pretendo ler</option>
-                                    <option value="2" ${item.status === 2 ? "selected" : ""}>Lendo</option>
-                                    <option value="3" ${item.status === 3 ? "selected" : ""}>Concluído</option>
-                                    <option value="4" ${item.status === 4 ? "selected" : ""}>Pretendo comprar</option>
-                                  </select>
-
-                                  <input id="cap_${item.mangaId}" type="number" min="0" value="${item.capituloAtual ?? 0}" />
-
-                                  <button class="btn-save" onclick="salvarProgresso('${item.mangaId}')">Salvar</button>
-
-                                  <button class="btn-danger"
-                                    onclick="removerDaMinhaLista('${item.mangaId}', '${String(item.titulo).replace(/'/g, "\\'")}')">
-                                    Remover
-                                  </button>
-                                </div>
+                                `).join('')}
                               </div>
-                            `).join('')}
-                          </div>
-                        `;
+                            `;
             } catch {
                 st.textContent = "Offline";
                 box.innerHTML = `<div class="muted">Erro ao conectar com a API. Confira se o MangaTracker.Api está rodando.</div>`;

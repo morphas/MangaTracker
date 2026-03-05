@@ -123,7 +123,12 @@
             justify-content: space-between;
             gap: 12px;
             align-items: flex-start;
+            cursor: pointer;
         }
+
+            .manga:hover {
+                border-color: #3a3a3a;
+            }
 
         .title {
             font-weight: 900;
@@ -190,17 +195,150 @@
                 width: 100%;
             }
         }
+
+        /* ===== Modal (usuário: somente leitura) ===== */
+        .modalBackdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.68);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            z-index: 99999;
+        }
+
+            .modalBackdrop.show {
+                display: flex;
+            }
+
+        .modal {
+            width: 100%;
+            max-width: 820px;
+            background: #121212;
+            border: 1px solid #2a2a2a;
+            border-radius: 18px;
+            box-shadow: 0 18px 60px rgba(0,0,0,.55);
+            max-height: calc(100vh - 36px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .modalHeader {
+            padding: 14px;
+            border-bottom: 1px solid #2a2a2a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+            .modalHeader h3 {
+                margin: 0;
+                font-size: 1.05rem;
+            }
+
+        .btnClose {
+            padding: 8px 10px;
+            border-radius: 12px;
+            border: 1px solid #2a2a2a;
+            background: #0f0f0f;
+            color: #ddd;
+            cursor: pointer;
+            font-weight: 900;
+        }
+
+            .btnClose:hover {
+                background: #1b1b1b;
+            }
+
+        .modalBody {
+            padding: 14px;
+            overflow: auto;
+            flex: 1 1 auto;
+        }
+
+        .modalFooter {
+            padding: 12px 14px;
+            border-top: 1px solid #2a2a2a;
+            background: rgba(0,0,0,.2);
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            flex: 0 0 auto;
+        }
+
+        .coverRow {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 12px;
+            align-items: start;
+        }
+
+        @media(max-width: 700px) {
+            .coverRow {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .cover {
+            width: 120px;
+            height: 170px;
+            border-radius: 14px;
+            border: 1px solid #2a2a2a;
+            background: rgba(0,0,0,.22);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #aaa;
+            font-weight: 900;
+        }
+
+            .cover img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+            }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            border: 1px solid #2a2a2a;
+            background: rgba(0,0,0,.18);
+            color: #ddd;
+            font-weight: 800;
+            font-size: .88rem;
+        }
+
+        .rowMetaInline {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 8px 0 12px;
+            color: #aaa;
+        }
+
+        .desc {
+            color: #cfcfcf;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
     </style>
 </head>
 
 <body>
-    <!-- Navbar compartilhada -->
     <div id="navbarHost"></div>
 
     <div class="container">
         <div class="card">
             <h1>📚 Mangás</h1>
-            <p>Explore o catálogo e adicione no seu perfil de leitura.</p>
+            <p>Explore o catálogo e adicione no seu perfil de leitura. Clique no mangá para ver detalhes.</p>
 
             <div class="controls">
                 <div>
@@ -240,211 +378,317 @@
         </div>
     </div>
 
+    <!-- Modal detalhes (somente leitura) -->
+    <div id="modalBackdrop" class="modalBackdrop">
+        <div class="modal">
+            <div class="modalHeader">
+                <h3 id="modalTitle">Detalhes</h3>
+                <button class="btnClose" id="modalClose">Fechar ✕</button>
+            </div>
+            <div id="modalBody" class="modalBody"></div>
+            <div id="modalFooter" class="modalFooter" style="display:none;"></div>
+        </div>
+    </div>
+
     <script src="shared/navbar.js"></script>
     <script>
-    // Navbar igual às outras páginas
-    if (typeof mountNavbar === 'function') mountNavbar();
+        if (typeof mountNavbar === 'function') mountNavbar();
 
-    // ===== Helpers =====
-    function getUsuarioLogado() {
-      try { return JSON.parse(localStorage.getItem('usuarioLogado')); }
-      catch {
-        localStorage.removeItem('usuarioLogado');
-        return null;
-      }
-    }
+        function getUsuarioLogado() {
+            try { return JSON.parse(localStorage.getItem('usuarioLogado')); }
+            catch { localStorage.removeItem('usuarioLogado'); return null; }
+        }
 
-    async function apiFetch(url, options = {}) {
-      const u = getUsuarioLogado();
-      const headers = options.headers ? { ...options.headers } : {};
-      if (u?.id) headers['X-User-Id'] = u.id;
-      return fetch(url, { ...options, headers });
-    }
+        async function apiFetch(url, options = {}) {
+            const u = getUsuarioLogado();
+            const headers = options.headers ? { ...options.headers } : {};
+            if (u?.id) headers['X-User-Id'] = u.id;
+            return fetch(url, { ...options, headers });
+        }
 
-    function showWarn(msg) {
-      const box = document.getElementById('warnBox');
-      box.style.display = 'block';
-      box.textContent = msg;
-    }
+        function showWarn(msg) {
+            const box = document.getElementById('warnBox');
+            box.style.display = 'block';
+            box.textContent = msg;
+        }
 
-    function hideWarn() {
-      const box = document.getElementById('warnBox');
-      box.style.display = 'none';
-      box.textContent = '';
-    }
+        function hideWarn() {
+            const box = document.getElementById('warnBox');
+            box.style.display = 'none';
+            box.textContent = '';
+        }
 
-    function setCount(txt) {
-      document.getElementById('count').textContent = txt;
-    }
+        function setCount(txt) {
+            document.getElementById('count').textContent = txt;
+        }
 
-    function escapeHtml(s) {
-      return String(s)
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
-    }
+        function escapeHtml(s) {
+            return String(s ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
 
-    // ===== Estado local (pra já marcar "Na minha lista" sem ficar chamando API toda hora) =====
-    let minhaListaIds = new Set();
+        function tagsToPretty(s) {
+            const raw = String(s ?? "").trim();
+            if (!raw) return "—";
+            return raw.split(",").map(x => x.trim()).filter(Boolean).join(", ");
+        }
 
-    async function carregarMinhaListaIds() {
-      minhaListaIds = new Set();
-      const u = getUsuarioLogado();
-      if (!u?.id) return;
+        // ===== Modal =====
+        const modalBackdrop = document.getElementById('modalBackdrop');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+        const modalFooter = document.getElementById('modalFooter');
+        const modalClose = document.getElementById('modalClose');
 
-      try {
-        const res = await apiFetch('/api/minhalista');
-        const dados = await res.json().catch(() => ([]));
-        if (!res.ok) return;
+        function openModal(title, htmlContent, footerHtml = null) {
+            modalTitle.textContent = title;
+            modalBody.innerHTML = htmlContent;
+            if (footerHtml) {
+                modalFooter.innerHTML = footerHtml;
+                modalFooter.style.display = "flex";
+            } else {
+                modalFooter.innerHTML = "";
+                modalFooter.style.display = "none";
+            }
+            modalBackdrop.classList.add('show');
+        }
 
-        (Array.isArray(dados) ? dados : []).forEach(x => {
-          if (x?.mangaId) minhaListaIds.add(String(x.mangaId).toLowerCase());
+        function closeModal() {
+            modalBackdrop.classList.remove('show');
+            modalBody.innerHTML = '';
+            modalFooter.innerHTML = '';
+            modalFooter.style.display = "none";
+        }
+
+        modalClose?.addEventListener('click', closeModal);
+        modalBackdrop?.addEventListener('click', (e) => {
+            if (e.target === modalBackdrop) closeModal();
         });
-      } catch { /* ignora */ }
-    }
 
-    // ===== Catálogo =====
-    async function carregarCatalogo() {
-      hideWarn();
+        // ===== Estado =====
+        let minhaListaIds = new Set();
+        let catalogoCacheById = new Map(); // para abrir modal sem refazer request
 
-      const box = document.getElementById('listaBox');
-      box.innerHTML = `<div class="muted">Carregando...</div>`;
-      setCount('Carregando...');
+        async function carregarMinhaListaIds() {
+            minhaListaIds = new Set();
+            const u = getUsuarioLogado();
+            if (!u?.id) return;
 
-      const q = document.getElementById('q').value.trim();
-      const fBR = document.getElementById('fBR').value; // "", "true", "false"
+            try {
+                const res = await apiFetch('/api/minhalista');
+                const dados = await res.json().catch(() => ([]));
+                if (!res.ok) return;
 
-      const params = new URLSearchParams();
-      if (q) params.set('q', q);
-      if (fBR) params.set('lancadoNoBrasil', fBR);
-
-      const url = params.toString() ? `/api/catalogo?${params.toString()}` : `/api/catalogo`;
-
-      try {
-        const res = await apiFetch(url);
-        const dados = await res.json().catch(() => ([]));
-
-        if (!res.ok) {
-          box.innerHTML = '';
-          showWarn(dados?.erro || 'Erro ao carregar catálogo.');
-          setCount('—');
-          return;
+                (Array.isArray(dados) ? dados : []).forEach(x => {
+                    if (x?.mangaId) minhaListaIds.add(String(x.mangaId).toLowerCase());
+                });
+            } catch { }
         }
 
-        const lista = (Array.isArray(dados) ? dados : [])
-          .sort((a, b) => (a.titulo || '').localeCompare(b.titulo || '', 'pt-BR', { sensitivity: 'base' }));
+        // ✅ Lê retorno PAGINADO: { items, total, page, pageSize }
+        async function carregarCatalogo() {
+            hideWarn();
 
-        if (lista.length === 0) {
-          box.innerHTML = `<div class="muted">Nenhum resultado.</div>`;
-          setCount('0 resultado(s)');
-          return;
-        }
+            const box = document.getElementById('listaBox');
+            box.innerHTML = `<div class="muted">Carregando...</div>`;
+            setCount('Carregando...');
 
-        setCount(`${lista.length} resultado(s)`);
+            const q = document.getElementById('q').value.trim();
+            const fBR = document.getElementById('fBR').value;
 
-        box.innerHTML = lista.map(m => {
-          const id = String(m.id || '');
-          const jaNaLista = minhaListaIds.has(id.toLowerCase());
+            const params = new URLSearchParams();
+            params.set('page', '1');
+            params.set('pageSize', '200');
+            if (q) params.set('q', q);
+            if (fBR) params.set('lancadoNoBrasil', fBR);
 
-          return `
-            <div class="manga">
-              <div style="min-width:0;">
-                <div class="title">${escapeHtml(m.titulo || '—')}</div>
-                <div class="meta">
-                  Lançado BR: <b>${m.lancadoNoBrasil ? 'Sim' : 'Não'}</b><br/>
-                  Editora: <b>${escapeHtml(m.editora || '—')}</b>
-                </div>
-                ${m.lancadoNoBrasil ? `<div class="pill">🇧🇷 Catálogo BR</div>` : ``}
-              </div>
+            const url = `/api/catalogo?${params.toString()}`;
 
-              <div class="rightCol">
-                ${
-                  jaNaLista
-                  ? `<button class="small ok" disabled>✅ Na minha lista</button>`
-                  : `<button class="small btn-primary" onclick="adicionarNaMinhaLista('${id}', '${escapeHtml(m.titulo || '')}')">+ Minha Lista</button>`
+            try {
+                const res = await apiFetch(url);
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    box.innerHTML = '';
+                    showWarn(data?.erro || 'Erro ao carregar catálogo.');
+                    setCount('—');
+                    return;
                 }
-                <button class="small" onclick="irParaMinhaLista()">Ver minha lista</button>
-              </div>
-            </div>
-          `;
-        }).join('');
 
-      } catch {
-        box.innerHTML = '';
-        showWarn('Erro ao conectar com a API.');
-        setCount('—');
-      }
-    }
+                const items = Array.isArray(data.items) ? data.items : [];
+                const total = Number(data.total ?? items.length ?? 0);
 
-    function irParaMinhaLista() {
-      window.location.href = 'minha-lista.html';
-    }
+                catalogoCacheById = new Map();
+                for (const it of items) {
+                    if (it?.id) catalogoCacheById.set(String(it.id), it);
+                }
 
-    async function adicionarNaMinhaLista(mangaId, titulo) {
-      hideWarn();
+                if (items.length === 0) {
+                    box.innerHTML = `<div class="muted">Nenhum resultado.</div>`;
+                    setCount(`${total} resultado(s)`);
+                    return;
+                }
 
-      const u = getUsuarioLogado();
-      if (!u?.id) {
-        alert('Você precisa fazer login para adicionar na sua lista.');
-        window.location.href = 'login.html';
-        return;
-      }
+                setCount(`${total} resultado(s)`);
 
-      const status = parseInt(document.getElementById('statusAdd').value, 10);
+                items.sort((a, b) => (a.titulo || '').localeCompare(b.titulo || '', 'pt-BR', { sensitivity: 'base' }));
 
-      try {
-        const res = await apiFetch('/api/minhalista', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            mangaId: mangaId,
-            status: status,
-            capituloAtual: status === 1 ? 0 : 0
-          })
-        });
+                box.innerHTML = items.map(m => {
+                    const id = String(m.id || '');
+                    const jaNaLista = minhaListaIds.has(id.toLowerCase());
+                    const editoraNome = m.editoraNome ?? m.editora ?? '—';
 
-        const dados = await res.json().catch(() => ({}));
+                    return `
+                            <div class="manga" onclick="abrirDetalhesUsuario('${id}')">
+                              <div style="min-width:0;">
+                                <div class="title">${escapeHtml(m.titulo || '—')}</div>
+                                <div class="meta">
+                                  Lançado BR: <b>${m.lancadoNoBrasil ? 'Sim' : 'Não'}</b><br/>
+                                  Editora: <b>${escapeHtml(editoraNome)}</b>
+                                  ${m.autor ? `<br/>Autor: <b>${escapeHtml(m.autor)}</b>` : ``}
+                                </div>
+                                ${m.lancadoNoBrasil ? `<div class="pill">🇧🇷 Catálogo BR</div>` : ``}
+                              </div>
 
-        if (!res.ok) {
-          showWarn(dados?.erro || 'Erro ao adicionar na sua lista.');
-          return;
+                              <div class="rightCol" onclick="event.stopPropagation();">
+                                ${jaNaLista
+                            ? `<button class="small ok" disabled>✅ Na minha lista</button>`
+                            : `<button class="small btn-primary" onclick="adicionarNaMinhaLista('${id}')">+ Minha Lista</button>`
+                        }
+                                <button class="small" onclick="irParaMinhaLista()">Ver minha lista</button>
+                              </div>
+                            </div>
+                        `;
+                }).join('');
+
+            } catch {
+                box.innerHTML = '';
+                showWarn('Erro ao conectar com a API.');
+                setCount('—');
+            }
         }
 
-        // Marca localmente e atualiza UI
-        minhaListaIds.add(String(mangaId).toLowerCase());
-        await carregarCatalogo();
+        function irParaMinhaLista() {
+            window.location.href = 'minha-lista.html';
+        }
 
-      } catch {
-        showWarn('Erro ao conectar com a API.');
-      }
-    }
+        async function adicionarNaMinhaLista(mangaId) {
+            hideWarn();
 
-    // ===== Eventos =====
-    let debounceTimer = null;
+            const u = getUsuarioLogado();
+            if (!u?.id) {
+                alert('Você precisa fazer login para adicionar na sua lista.');
+                window.location.href = 'login.html';
+                return;
+            }
 
-    document.getElementById('q').addEventListener('input', () => {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => carregarCatalogo(), 350);
-    });
+            const status = parseInt(document.getElementById('statusAdd').value, 10);
 
-    document.getElementById('btnBuscar').addEventListener('click', carregarCatalogo);
+            try {
+                const res = await apiFetch('/api/minhalista', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        mangaId: mangaId,
+                        status: status,
+                        capituloAtual: 0
+                    })
+                });
 
-    document.getElementById('btnTodos').addEventListener('click', async () => {
-      document.getElementById('q').value = '';
-      document.getElementById('fBR').value = '';
-      await carregarMinhaListaIds();
-      await carregarCatalogo();
-    });
+                const dados = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    showWarn(dados?.erro || 'Erro ao adicionar na sua lista.');
+                    return;
+                }
 
-    document.getElementById('fBR').addEventListener('change', carregarCatalogo);
+                minhaListaIds.add(String(mangaId).toLowerCase());
+                await carregarCatalogo();
 
-    // ===== Start =====
-    (async () => {
-      await carregarMinhaListaIds();
-      await carregarCatalogo();
-    })();
+            } catch {
+                showWarn('Erro ao conectar com a API.');
+            }
+        }
+
+        // ===== Popup detalhes (somente leitura) =====
+        async function abrirDetalhesUsuario(id) {
+            // tenta do cache; se faltar algo, pega por ID (mais confiável)
+            let m = catalogoCacheById.get(String(id));
+            if (!m || m.descricao === undefined || m.capaUrl === undefined || m.demografia === undefined) {
+                const res = await apiFetch(`/api/catalogo/${id}`);
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    showWarn(data?.erro || "Erro ao abrir detalhes.");
+                    return;
+                }
+                m = data;
+            }
+
+            const capa = String(m.capaUrl ?? "").trim();
+            const capaHtml = capa
+                ? `<div class="cover"><img src="${escapeHtml(capa)}" alt="Capa"></div>`
+                : `<div class="cover">SEM CAPA</div>`;
+
+            const editoraNome = m.editoraNome ?? m.editora ?? "—";
+
+            const html = `
+                  <div class="coverRow">
+                    ${capaHtml}
+                    <div style="min-width:0;">
+                      <div style="font-weight:950;font-size:1.05rem;margin-bottom:6px;">${escapeHtml(m.titulo ?? "—")}</div>
+
+                      <div class="rowMetaInline">
+                        <span class="tag">BR: ${m.lancadoNoBrasil ? "Sim" : "Não"}</span>
+                        <span class="tag">Editora: ${escapeHtml(editoraNome)}</span>
+                        ${m.autor ? `<span class="tag">Autor: ${escapeHtml(m.autor)}</span>` : ``}
+                        ${m.anoLancamentoOriginal ? `<span class="tag">Ano (orig): ${escapeHtml(m.anoLancamentoOriginal)}</span>` : ``}
+                        ${m.anoLancamentoBrasil ? `<span class="tag">Ano (BR): ${escapeHtml(m.anoLancamentoBrasil)}</span>` : ``}
+                        ${m.demografia ? `<span class="tag">Tags: ${escapeHtml(tagsToPretty(m.demografia))}</span>` : ``}
+                      </div>
+
+                      <div class="desc">${escapeHtml(m.descricao ?? "Sem descrição por enquanto.")}</div>
+                    </div>
+                  </div>
+                `;
+
+            const footer = `
+                  <button class="btn-primary small" onclick="adicionarNaMinhaLista('${escapeHtml(String(id))}')">+ Adicionar na Minha Lista</button>
+                `;
+
+            openModal("📖 Detalhes do Mangá", html, footer);
+        }
+
+        // expõe pro onclick inline
+        window.abrirDetalhesUsuario = abrirDetalhesUsuario;
+        window.adicionarNaMinhaLista = adicionarNaMinhaLista;
+        window.irParaMinhaLista = irParaMinhaLista;
+
+        // ===== Eventos =====
+        let debounceTimer = null;
+
+        document.getElementById('q').addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => carregarCatalogo(), 350);
+        });
+
+        document.getElementById('btnBuscar').addEventListener('click', carregarCatalogo);
+
+        document.getElementById('btnTodos').addEventListener('click', async () => {
+            document.getElementById('q').value = '';
+            document.getElementById('fBR').value = '';
+            await carregarMinhaListaIds();
+            await carregarCatalogo();
+        });
+
+        document.getElementById('fBR').addEventListener('change', carregarCatalogo);
+
+        (async () => {
+            await carregarMinhaListaIds();
+            await carregarCatalogo();
+        })();
     </script>
 </body>
 </html>

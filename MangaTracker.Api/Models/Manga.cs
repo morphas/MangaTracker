@@ -1,38 +1,37 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace MangaTracker.Models
 {
     public class Manga
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
+        public Guid Id { get; set; }
 
-        // Básico (cadastro rápido)
-        public string Titulo { get; set; } = "";
-        public int? TotalCapitulos { get; set; } = null;
+        public string Titulo { get; set; } = string.Empty;
 
-        public bool LancadoNoBrasil { get; set; } = false;
-        public string? Editora { get; set; } = null;
+        public int TotalCapitulos { get; set; }
 
-        // para filtro por editora
-        public string? EditoraKey { get; set; } = null;
+        public bool LancadoNoBrasil { get; set; }
 
-        // ===== Detalhes (admin preenche depois) =====
-        public string? CapaUrl { get; set; } = null;        // link da imagem
-        public string? Descricao { get; set; } = null;
+        public Guid? EditoraId { get; set; }
 
-        // Ex.: "Shounen", "Shoujo", "Seinen", "Josei"
-        public string? Demografia { get; set; } = null;
+        public Editora? EditoraNav { get; set; }
 
-        public string? Autor { get; set; } = null;
+        public string? CapaUrl { get; set; }
 
-        // Ano do lançamento original (Japão/país de origem)
-        public int? AnoLancamentoOriginal { get; set; } = null;
+        public string? Descricao { get; set; }
 
-        // Ano do lançamento no Brasil (se aplicável)
-        public int? AnoLancamentoBrasil { get; set; } = null;
+        public string? Demografia { get; set; }
+
+        public string? Autor { get; set; }
+
+        public int? AnoLancamentoOriginal { get; set; }
+
+        public int? AnoLancamentoBrasil { get; set; }
+
+        // ✅ NOVO CAMPO
+        public List<string> Generos { get; set; } = new();
 
         public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
-        public Guid? EditoraId { get; set; } = null;
-        public Editora? EditoraNav { get; set; } = null;
     }
 }

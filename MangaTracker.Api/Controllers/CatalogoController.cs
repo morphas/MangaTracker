@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using MangaTracker.Models;
 using MangaTracker.Services;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace MangaTracker.Api.Controllers
 {
@@ -15,21 +17,20 @@ namespace MangaTracker.Api.Controllers
             _service = service;
         }
 
-        // DTOs (cadastro/edição rápida)
         public record CadastrarMangaDto(string Titulo, bool LancadoNoBrasil, Guid? EditoraId);
         public record AtualizarMangaDto(string Titulo, bool LancadoNoBrasil, Guid? EditoraId);
 
-        // DTO (detalhes avançados - admin)
+        // ✅ Detalhes avançados - com Generos (lista)
         public record AtualizarMangaDetalhesDto(
             string? CapaUrl,
             string? Descricao,
             string? Demografia,
             string? Autor,
             int? AnoLancamentoOriginal,
-            int? AnoLancamentoBrasil
+            int? AnoLancamentoBrasil,
+            List<string>? Generos
         );
 
-        // ========= Helpers =========
         private bool TrySetAdmin(Guid? userId, out IActionResult? erro)
         {
             erro = null;
@@ -64,27 +65,33 @@ namespace MangaTracker.Api.Controllers
 
         private static bool UrlValida(string? url)
         {
-            if (string.IsNullOrWhiteSpace(url)) return true; // opcional
+            if (string.IsNullOrWhiteSpace(url)) return true;
             return Uri.TryCreate(url.Trim(), UriKind.Absolute, out var u)
                    && (u.Scheme == Uri.UriSchemeHttp || u.Scheme == Uri.UriSchemeHttps);
         }
 
         private static bool AnoValido(int? ano)
         {
-            if (!ano.HasValue) return true; // opcional
+            if (!ano.HasValue) return true;
             var a = ano.Value;
-            var max = DateTime.Now.Year + 1; // tolera "ano que vem"
+            var max = DateTime.Now.Year + 1;
             return a >= 1900 && a <= max;
         }
 
-        // =========================
+        // ✅ Normaliza lista: tira vazios, trim, remove duplicados (case-insensitive) e limita a 4
+        private static List<string> NormalizarGeneros(List<string>? generos)
+        {
+            if (generos is null) return new List<string>();
+
+            return generos
+                .Select(x => (x ?? "").Trim())
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Take(4)
+                .ToList();
+        }
+
         // GET: api/catalogo (PAGINADO)
-        // Filtros:
-        // ?lancadoNoBrasil=true|false
-        // ?editoraId=<GUID>
-        // ?q=jujutsu
-        // ?page=1&pageSize=20
-        // =========================
         [HttpGet]
         public IActionResult Get(
             [FromQuery] bool? lancadoNoBrasil,
@@ -95,7 +102,6 @@ namespace MangaTracker.Api.Controllers
         {
             var result = _service.ListarCatalogoPaginado(lancadoNoBrasil, editoraId, q, page, pageSize);
 
-            // devolve já com editoraNome (pra o admin.html mostrar bonito)
             var items = result.Items.Select(m => new
             {
                 id = m.Id,
@@ -103,13 +109,14 @@ namespace MangaTracker.Api.Controllers
                 totalCapitulos = m.TotalCapitulos,
                 lancadoNoBrasil = m.LancadoNoBrasil,
                 editoraId = m.EditoraId,
-                editoraNome = m.EditoraNav?.Nome,   // ✅ aqui
+                editoraNome = m.EditoraNav?.Nome,
                 capaUrl = m.CapaUrl,
                 descricao = m.Descricao,
                 demografia = m.Demografia,
                 autor = m.Autor,
                 anoLancamentoOriginal = m.AnoLancamentoOriginal,
                 anoLancamentoBrasil = m.AnoLancamentoBrasil,
+                generos = m.Generos ?? new List<string>(),
                 criadoEm = m.CriadoEm
             });
 
@@ -122,9 +129,7 @@ namespace MangaTracker.Api.Controllers
             });
         }
 
-        // =========================
         // GET: api/catalogo/{id}
-        // =========================
         [HttpGet("{id:guid}")]
         public IActionResult GetById(Guid id)
         {
@@ -146,13 +151,12 @@ namespace MangaTracker.Api.Controllers
                 autor = manga.Autor,
                 anoLancamentoOriginal = manga.AnoLancamentoOriginal,
                 anoLancamentoBrasil = manga.AnoLancamentoBrasil,
+                generos = manga.Generos ?? new List<string>(),
                 criadoEm = manga.CriadoEm
             });
         }
 
-        // =========================
         // POST: api/catalogo (admin)
-        // =========================
         [HttpPost]
         public IActionResult Post(
             [FromHeader(Name = "X-User-Id")] Guid? userId,
@@ -190,9 +194,7 @@ namespace MangaTracker.Api.Controllers
             }
         }
 
-        // =========================
         // PUT: api/catalogo/{id} (admin) - edição rápida
-        // =========================
         [HttpPut("{id:guid}")]
         public IActionResult Put(
             [FromHeader(Name = "X-User-Id")] Guid? userId,
@@ -232,9 +234,7 @@ namespace MangaTracker.Api.Controllers
             }
         }
 
-        // =========================
         // PUT: api/catalogo/{id}/detalhes (admin) - detalhes avançados
-        // =========================
         [HttpPut("{id:guid}/detalhes")]
         public IActionResult PutDetalhes(
             [FromHeader(Name = "X-User-Id")] Guid? userId,
@@ -253,6 +253,8 @@ namespace MangaTracker.Api.Controllers
             if (!AnoValido(dto.AnoLancamentoOriginal) || !AnoValido(dto.AnoLancamentoBrasil))
                 return BadRequest(new { erro = "Ano inválido (use entre 1900 e ano atual + 1)." });
 
+            var generosOk = NormalizarGeneros(dto.Generos);
+
             try
             {
                 var manga = _service.AtualizarDetalhesManga(
@@ -262,7 +264,8 @@ namespace MangaTracker.Api.Controllers
                     dto.Demografia?.Trim(),
                     dto.Autor?.Trim(),
                     dto.AnoLancamentoOriginal,
-                    dto.AnoLancamentoBrasil
+                    dto.AnoLancamentoBrasil,
+                    generosOk
                 );
 
                 return Ok(new
@@ -274,7 +277,8 @@ namespace MangaTracker.Api.Controllers
                     demografia = manga.Demografia,
                     autor = manga.Autor,
                     anoLancamentoOriginal = manga.AnoLancamentoOriginal,
-                    anoLancamentoBrasil = manga.AnoLancamentoBrasil
+                    anoLancamentoBrasil = manga.AnoLancamentoBrasil,
+                    generos = manga.Generos ?? new List<string>()
                 });
             }
             catch (Exception ex)
@@ -283,9 +287,7 @@ namespace MangaTracker.Api.Controllers
             }
         }
 
-        // =========================
         // DELETE: api/catalogo/{id} (admin)
-        // =========================
         [HttpDelete("{id:guid}")]
         public IActionResult Delete(
             [FromHeader(Name = "X-User-Id")] Guid? userId,

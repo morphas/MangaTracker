@@ -132,6 +132,37 @@
         margin: 6px 0;
       }
 
+      /* ===== Submenu (Mangás) ===== */
+      .submenuBtn{
+        width: 100%;
+        display:flex;
+        justify-content: space-between;
+        align-items:center;
+        padding: 10px 12px;
+        border-radius: 10px;
+        text-decoration:none;
+        background: transparent;
+        border: none;
+        color: #ddd;
+        cursor: pointer;
+        font-size: 0.95em;
+        box-sizing: border-box;
+      }
+      .submenuBtn:hover{ background:#1b1b1b; }
+
+      .submenu{
+        display:none;
+        margin: 6px 0 8px;
+        padding-left: 10px;
+        border-left: 1px solid #242424;
+      }
+      .submenu.show{ display:block; }
+
+      .submenu a{
+        padding: 9px 12px;
+        border-radius: 10px;
+      }
+
       @media (max-width: 980px) {
         .navbar { padding: 14px 18px; }
       }
@@ -173,14 +204,22 @@
         </button>
 
         <div class="dropdown" id="userDropdown">
-          <a href="mangas.html">📖 Mangás <span>›</span></a>
+
+          <!-- Mangás com submenu -->
+          <button class="submenuBtn" id="mangasMenuBtn">
+            📖 Mangás <span style="opacity:.8;">▸</span>
+          </button>
+          <div class="submenu" id="mangasSubmenu">
+            <a href="mangas.html">📚 Títulos <span>›</span></a>
+            <a href="editoras.html">🏢 Editoras <span>›</span></a>
+          </div>
+
           <a href="minha-lista.html">📚 Minha Lista <span>›</span></a>
           <a href="#" id="perfilBtn">👤 Perfil (em breve) <span>›</span></a>
 
           ${u.isAdmin ? `
             <div class="sep"></div>
             <a href="admin.html">🛠️ Admin (Catálogo) <span>›</span></a>
-            
           ` : ``}
 
           <div class="sep"></div>
@@ -194,9 +233,23 @@
         const logoutBtn = host.querySelector("#logoutBtn");
         const perfilBtn = host.querySelector("#perfilBtn");
 
+        // submenu
+        const mangasMenuBtn = host.querySelector("#mangasMenuBtn");
+        const mangasSubmenu = host.querySelector("#mangasSubmenu");
+
         btn.addEventListener("click", (e) => {
             e.preventDefault();
             dd.style.display = (dd.style.display === "block") ? "none" : "block";
+
+            // se fechar dropdown, fecha submenu também
+            if (dd.style.display !== "block") {
+                mangasSubmenu?.classList.remove("show");
+            }
+        });
+
+        mangasMenuBtn?.addEventListener("click", (e) => {
+            e.preventDefault();
+            mangasSubmenu?.classList.toggle("show");
         });
 
         logoutBtn.addEventListener("click", (e) => {
@@ -210,7 +263,10 @@
         });
 
         document.addEventListener("click", (e) => {
-            if (!e.target.closest(".userbox")) dd.style.display = "none";
+            if (!e.target.closest(".userbox")) {
+                dd.style.display = "none";
+                mangasSubmenu?.classList.remove("show");
+            }
         });
     }
 

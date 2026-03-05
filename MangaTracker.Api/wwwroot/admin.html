@@ -81,7 +81,6 @@
             color: #e9e9e9;
         }
 
-        /* Tabs */
         .tabsBar {
             display: flex;
             gap: 10px;
@@ -120,7 +119,6 @@
                 display: block;
             }
 
-        /* Panel Card */
         .panelCard {
             background: rgba(16,18,24,.85);
             border: 1px solid rgba(36,39,53,.9);
@@ -156,7 +154,6 @@
             padding: 14px 16px 16px;
         }
 
-        /* Toolbar */
         .toolBar {
             display: flex;
             justify-content: space-between;
@@ -188,7 +185,7 @@
             }
 
         textarea {
-            min-height: 100px;
+            min-height: 120px;
             resize: vertical;
         }
 
@@ -264,7 +261,6 @@
             font-size: .92rem;
         }
 
-        /* List */
         .list {
             display: grid;
             gap: 10px;
@@ -338,7 +334,6 @@
             background: rgba(0,0,0,.12);
         }
 
-        /* Checkbox chip */
         .chipCheck {
             display: inline-flex;
             gap: 10px;
@@ -359,7 +354,7 @@
                 accent-color: var(--red);
             }
 
-        /* Modal */
+        /* ✅ Modal rolável */
         .modalBackdrop {
             position: fixed;
             inset: 0;
@@ -377,12 +372,15 @@
 
         .modal {
             width: 100%;
-            max-width: 760px;
+            max-width: 860px;
+            max-height: 88vh;
+            display: flex;
+            flex-direction: column;
             background: rgba(16,18,24,.92);
             border: 1px solid rgba(36,39,53,.95);
             border-radius: 20px;
-            padding: 14px;
             box-shadow: var(--shadow);
+            overflow: hidden;
         }
 
         .modalHeader {
@@ -390,15 +388,32 @@
             align-items: center;
             justify-content: space-between;
             gap: 10px;
-            margin-bottom: 12px;
-            padding-bottom: 10px;
+            padding: 14px;
             border-bottom: 1px solid rgba(36,39,53,.75);
+            flex: 0 0 auto;
         }
 
             .modalHeader h3 {
                 margin: 0;
                 font-size: 1.05rem;
             }
+
+        .modalBody {
+            padding: 14px;
+            overflow: auto;
+            flex: 1 1 auto;
+        }
+
+        .modalFooter {
+            padding: 12px 14px;
+            border-top: 1px solid rgba(36,39,53,.75);
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            flex: 0 0 auto;
+            background: rgba(11,13,19,.35);
+        }
 
         .btnClose {
             padding: 8px 10px;
@@ -414,11 +429,37 @@
                 background: rgba(255,255,255,.03);
             }
 
-        .divider {
-            height: 1px;
-            background: rgba(36,39,53,.75);
-            margin: 12px 0;
+        /* Chips de gênero */
+        .chipsWrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
         }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(36,39,53,.95);
+            background: rgba(0,0,0,.18);
+            font-weight: 900;
+            color: #e7eaf3;
+        }
+
+            .chip button {
+                border: none;
+                background: transparent;
+                color: #ffd2d2;
+                cursor: pointer;
+                font-weight: 900;
+            }
+
+                .chip button:hover {
+                    color: #fff;
+                }
     </style>
 </head>
 
@@ -426,14 +467,12 @@
     <div id="navbarHost"></div>
 
     <div class="container">
-
         <div class="headerCard">
             <div class="headerLeft">
                 <h1>🛠️ Admin – Painel</h1>
                 <div class="meta" id="who">Validando admin...</div>
                 <div class="warn" id="warnBox"></div>
             </div>
-
             <div class="headerRight">
                 <span class="pill">MangaTracker API</span>
             </div>
@@ -466,9 +505,6 @@
                         <div class="toolbarLeft">
                             <input id="edBusca" placeholder="Buscar editora..." style="min-width:260px; width:auto;" />
                         </div>
-                        <div class="toolbarRight">
-                            <!-- espaço futuro -->
-                        </div>
                     </div>
 
                     <div class="list" id="editorasList"></div>
@@ -482,7 +518,7 @@
                 <div class="panelHeader">
                     <div>
                         <h2>📚 Mangás (Catálogo)</h2>
-                        <div class="hint">Cadastro, edição e remoção. Lista paginada pra não ficar pesado quando crescer.</div>
+                        <div class="hint">Cadastro, edição e remoção. Clique em “Detalhes” para editar capa/descrição/autor/demografia/gêneros.</div>
                     </div>
 
                     <div class="toolbarRight">
@@ -518,10 +554,6 @@
                             </select>
                             <button class="btn btnGhost" id="btnCatLimparFiltros">Limpar</button>
                         </div>
-
-                        <div class="toolbarRight">
-                            <!-- espaço futuro -->
-                        </div>
                     </div>
 
                     <div class="list" id="catalogoList"></div>
@@ -555,10 +587,11 @@
                     <h3 id="modalTitle">Modal</h3>
                     <button class="btnClose" id="modalClose">Fechar ✕</button>
                 </div>
-                <div id="modalBody"></div>
+
+                <div class="modalBody" id="modalBody"></div>
+                <div class="modalFooter" id="modalFooter"></div>
             </div>
         </div>
-
     </div>
 
     <script src="shared/navbar.js"></script>
@@ -568,8 +601,7 @@
         // ===== Utils =====
         function escapeHtml(str) {
             const s = String(str ?? "");
-            return s
-                .replace(/&/g, "&amp;")
+            return s.replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
@@ -631,25 +663,25 @@
         const modalBackdrop = document.getElementById('modalBackdrop');
         const modalTitle = document.getElementById('modalTitle');
         const modalBody = document.getElementById('modalBody');
+        const modalFooter = document.getElementById('modalFooter');
         const modalClose = document.getElementById('modalClose');
 
-        function openModal(title, htmlContent) {
+        function openModal(title, bodyHtml, footerHtml) {
             modalTitle.textContent = title;
-            modalBody.innerHTML = htmlContent;
+            modalBody.innerHTML = bodyHtml || "";
+            modalFooter.innerHTML = footerHtml || "";
             modalBackdrop.classList.add('show');
         }
 
         function closeModal() {
             modalBackdrop.classList.remove('show');
             modalBody.innerHTML = '';
+            modalFooter.innerHTML = '';
         }
 
         modalClose?.addEventListener('click', closeModal);
-        modalBackdrop?.addEventListener('click', (e) => {
-            if (e.target === modalBackdrop) closeModal();
-        });
+        modalBackdrop?.addEventListener('click', (e) => { if (e.target === modalBackdrop) closeModal(); });
 
-        // expõe
         window._mtOpenModal = openModal;
         window._mtCloseModal = closeModal;
 
@@ -665,17 +697,15 @@
         });
 
         // ===== Estado =====
-        let editorasCache = []; // para filtros + selects + busca local
+        let editorasCache = [];
 
-        // Paginação catálogo
         let catPage = 1;
         let catPageSize = 20;
         let catTotal = 0;
 
-        // Filtros catálogo
         let catQ = "";
-        let catBR = "";        // "", "true", "false"
-        let catEditoraId = ""; // "" ou guid
+        let catBR = "";
+        let catEditoraId = "";
 
         function updateCatPagerUI() {
             const totalPages = Math.max(1, Math.ceil(catTotal / catPageSize));
@@ -721,21 +751,21 @@
             }
 
             list.innerHTML = data.map(e => `
-            <div class="rowItem">
-              <div class="rowMain" style="min-width:0;">
-                <div class="rowTitle">${escapeHtml(e.nome)}</div>
-                <div class="rowMeta">
-                  <span class="tag">Key: ${escapeHtml(e.key)}</span>
-                  ${e.descricao ? `<span class="tag">${escapeHtml(e.descricao)}</span>` : ``}
-                </div>
-              </div>
+                <div class="rowItem">
+                  <div class="rowMain" style="min-width:0;">
+                    <div class="rowTitle">${escapeHtml(e.nome)}</div>
+                    <div class="rowMeta">
+                      <span class="tag">Key: ${escapeHtml(e.key)}</span>
+                      ${e.descricao ? `<span class="tag">${escapeHtml(e.descricao)}</span>` : ``}
+                    </div>
+                  </div>
 
-              <div class="rowActions">
-                <button class="btn" onclick="abrirEditarEditora('${e.id}')">Editar</button>
-                <button class="btn btnDanger" onclick="removerEditora('${e.id}','${escapeHtml(e.nome)}')">Excluir</button>
-              </div>
-            </div>
-          `).join("");
+                  <div class="rowActions">
+                    <button class="btn" onclick="abrirEditarEditora('${e.id}')">Editar</button>
+                    <button class="btn btnDanger" onclick="removerEditora('${e.id}','${escapeHtml(e.nome)}')">Excluir</button>
+                  </div>
+                </div>
+              `).join("");
         }
 
         async function carregarEditoras() {
@@ -755,10 +785,7 @@
             editorasCache = Array.isArray(data) ? data : [];
             editorasCache.sort((a, b) => String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR", { sensitivity: "base" }));
 
-            // alimenta selects
             await carregarEditorasNoSelects();
-
-            // render lista
             renderEditorasList(editorasCache);
         }
 
@@ -768,17 +795,17 @@
 
             if (selManga) {
                 selManga.innerHTML = `
-              <option value="">Selecione...</option>
-              ${editorasCache.map(e => `<option value="${e.id}">${escapeHtml(e.nome)}</option>`).join("")}
-            `;
+                      <option value="">Selecione...</option>
+                      ${editorasCache.map(e => `<option value="${e.id}">${escapeHtml(e.nome)}</option>`).join("")}
+                    `;
             }
 
             if (selFiltro) {
                 const current = catEditoraId;
                 selFiltro.innerHTML = `
-              <option value="">Editora: Todas</option>
-              ${editorasCache.map(e => `<option value="${e.id}">${escapeHtml(e.nome)}</option>`).join("")}
-            `;
+                      <option value="">Editora: Todas</option>
+                      ${editorasCache.map(e => `<option value="${e.id}">${escapeHtml(e.nome)}</option>`).join("")}
+                    `;
                 selFiltro.value = current || "";
             }
         }
@@ -786,27 +813,25 @@
         function abrirNovaEditora() {
             hideWarn();
 
-            const html = `
-            <div class="fieldGrid">
-              <div>
-                <label style="display:block;margin:10px 0 6px;color:var(--muted);font-weight:800;">Nome da Editora</label>
-                <input id="edNomeModal" placeholder="Ex: Panini" />
-              </div>
-              <div>
-                <label style="display:block;margin:10px 0 6px;color:var(--muted);font-weight:800;">Descrição (opcional)</label>
-                <input id="edDescModal" placeholder="Ex: Editora brasileira..." />
-              </div>
-            </div>
+            const body = `
+                <div class="fieldGrid">
+                  <div>
+                    <label style="display:block;margin:10px 0 6px;color:var(--muted);font-weight:800;">Nome da Editora</label>
+                    <input id="edNomeModal" placeholder="Ex: Panini" />
+                  </div>
+                  <div>
+                    <label style="display:block;margin:10px 0 6px;color:var(--muted);font-weight:800;">Descrição (opcional)</label>
+                    <input id="edDescModal" placeholder="Ex: Editora brasileira..." />
+                  </div>
+                </div>
+              `;
 
-            <div class="divider"></div>
+            const footer = `
+                <button class="btn btnGhost" onclick="_mtCloseModal()">Cancelar</button>
+                <button class="btn btnPrimary" onclick="criarEditoraModal()">Cadastrar</button>
+              `;
 
-            <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;">
-              <button class="btn btnGhost" onclick="_mtCloseModal()">Cancelar</button>
-              <button class="btn btnPrimary" onclick="criarEditoraModal()">Cadastrar</button>
-            </div>
-          `;
-
-            openModal("🏢 Nova Editora", html);
+            openModal("🏢 Nova Editora", body, footer);
             setTimeout(() => document.getElementById("edNomeModal")?.focus(), 0);
         }
 
@@ -824,10 +849,7 @@
             });
 
             const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                showWarn(data?.erro || "Erro ao cadastrar editora.");
-                return;
-            }
+            if (!res.ok) { showWarn(data?.erro || "Erro ao cadastrar editora."); return; }
 
             closeModal();
             await carregarEditoras();
@@ -840,27 +862,25 @@
             const e = editorasCache.find(x => x.id === id);
             if (!e) { showWarn("Editora não encontrada no cache. Recarregue."); return; }
 
-            const html = `
-            <div class="fieldGrid">
-              <div>
-                <label style="display:block;margin:10px 0 6px;color:var(--muted);font-weight:800;">Nome</label>
-                <input id="edEditNome" value="${escapeHtml(e.nome)}" />
-              </div>
-              <div>
-                <label style="display:block;margin:10px 0 6px;color:var(--muted);font-weight:800;">Descrição (opcional)</label>
-                <input id="edEditDesc" value="${escapeHtml(e.descricao ?? "")}" placeholder="(opcional)" />
-              </div>
-            </div>
+            const body = `
+                <div class="fieldGrid">
+                  <div>
+                    <label style="display:block;margin:10px 0 6px;color:var(--muted);font-weight:800;">Nome</label>
+                    <input id="edEditNome" value="${escapeHtml(e.nome)}" />
+                  </div>
+                  <div>
+                    <label style="display:block;margin:10px 0 6px;color:var(--muted);font-weight:800;">Descrição (opcional)</label>
+                    <input id="edEditDesc" value="${escapeHtml(e.descricao ?? "")}" placeholder="(opcional)" />
+                  </div>
+                </div>
+              `;
 
-            <div class="divider"></div>
+            const footer = `
+                <button class="btn btnGhost" onclick="_mtCloseModal()">Cancelar</button>
+                <button class="btn btnPrimary" onclick="salvarEditora('${id}')">Salvar</button>
+              `;
 
-            <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;">
-              <button class="btn btnGhost" onclick="_mtCloseModal()">Cancelar</button>
-              <button class="btn btnPrimary" onclick="salvarEditora('${id}')">Salvar</button>
-            </div>
-          `;
-
-            openModal("✏️ Editar Editora", html);
+            openModal("✏️ Editar Editora", body, footer);
             setTimeout(() => document.getElementById("edEditNome")?.focus(), 0);
         }
 
@@ -878,10 +898,7 @@
             });
 
             const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                showWarn(data?.erro || "Erro ao atualizar editora.");
-                return;
-            }
+            if (!res.ok) { showWarn(data?.erro || "Erro ao atualizar editora."); return; }
 
             closeModal();
             await carregarEditoras();
@@ -897,17 +914,14 @@
             const res = await apiFetch(`/api/editoras/${id}`, { method: "DELETE" });
             const data = await res.json().catch(() => ({}));
 
-            if (!res.ok) {
-                showWarn(data?.erro || "Erro ao remover editora.");
-                return;
-            }
+            if (!res.ok) { showWarn(data?.erro || "Erro ao remover editora."); return; }
 
             await carregarEditoras();
             await carregarCatalogo();
             await carregarLogs();
         }
 
-        // ===== Mangás (Catálogo) =====
+        // ===== Mangás =====
         async function carregarCatalogo() {
             const list = document.getElementById("catalogoList");
             const count = document.getElementById("catCount");
@@ -936,58 +950,66 @@
             }
 
             list.innerHTML = items.map(m => `
-            <div class="rowItem">
-              <div class="rowMain">
-                <div class="rowTitle">${escapeHtml(m.titulo)}</div>
-                <div class="rowMeta">
-                  <span class="tag ${m.lancadoNoBrasil ? "tagRed" : ""}">BR: ${m.lancadoNoBrasil ? "Sim" : "Não"}</span>
-                  <span class="tag">Editora: ${escapeHtml(m.editoraNome ?? "—")}</span>
-                </div>
-              </div>
+                <div class="rowItem">
+                  <div class="rowMain">
+                    <div class="rowTitle">${escapeHtml(m.titulo)}</div>
+                    <div class="rowMeta">
+                      <span class="tag ${m.lancadoNoBrasil ? "tagRed" : ""}">BR: ${m.lancadoNoBrasil ? "Sim" : "Não"}</span>
+                      <span class="tag">Editora: ${escapeHtml(m.editoraNome ?? "—")}</span>
+                      ${(() => {
+                    const parts = [];
+                    if (m.demografia) parts.push(m.demografia);
 
-              <div class="rowActions">
-                <button class="btn" onclick="abrirEditarManga('${m.id}', '${escapeHtml(m.titulo)}', ${m.lancadoNoBrasil ? "true" : "false"}, '${m.editoraId ?? ""}')">Editar</button>
-                <button class="btn btnDanger" onclick="excluirManga('${m.id}','${escapeHtml(m.titulo)}')">Excluir</button>
-              </div>
-            </div>
-          `).join("");
+                    const gs = (Array.isArray(m.generos) ? m.generos : []).filter(Boolean).slice(0, 4);
+                    if (gs.length) parts.push(...gs);
+
+                    return parts.length
+                        ? `<span class="tag">Tags: ${escapeHtml(parts.join(" • "))}</span>`
+                        : ``;
+                })()}
+                    </div>
+                  </div>
+
+                  <div class="rowActions">
+                    <button class="btn" onclick="abrirDetalhesManga('${m.id}')">Detalhes</button>
+                    <button class="btn" onclick="abrirEditarManga('${m.id}', '${escapeHtml(m.titulo)}', ${m.lancadoNoBrasil ? "true" : "false"}, '${m.editoraId ?? ""}')">Editar</button>
+                    <button class="btn btnDanger" onclick="excluirManga('${m.id}','${escapeHtml(m.titulo)}')">Excluir</button>
+                  </div>
+                </div>
+              `).join("");
         }
 
         function abrirNovoManga() {
             hideWarn();
 
-            const html = `
-            <div>
-              <label style="display:block;margin:10px 0 6px;color:var(--muted);font-weight:800;">Título</label>
-              <input id="mTituloModal" placeholder="Ex: Jujutsu Kaisen" />
-            </div>
+            const body = `
+                <div>
+                  <label style="display:block;margin:10px 0 6px;color:var(--muted);font-weight:800;">Título</label>
+                  <input id="mTituloModal" placeholder="Ex: Jujutsu Kaisen" />
+                </div>
 
-            <div style="margin-top:10px;">
-              <label class="chipCheck">
-                <input type="checkbox" id="mBRModal" />
-                Lançado no Brasil
-              </label>
-            </div>
+                <div style="margin-top:10px;">
+                  <label class="chipCheck">
+                    <input type="checkbox" id="mBRModal" />
+                    Lançado no Brasil
+                  </label>
+                </div>
 
-            <div id="editoraWrapModal" style="display:none; margin-top:10px;">
-              <label style="display:block;margin:10px 0 6px;color:var(--muted);font-weight:800;">Editora</label>
-              <select id="mEditoraId"></select>
-            </div>
+                <div id="editoraWrapModal" style="display:none; margin-top:10px;">
+                  <label style="display:block;margin:10px 0 6px;color:var(--muted);font-weight:800;">Editora</label>
+                  <select id="mEditoraId"></select>
+                </div>
+              `;
 
-            <div class="divider"></div>
+            const footer = `
+                <button class="btn btnGhost" onclick="_mtCloseModal()">Cancelar</button>
+                <button class="btn btnPrimary" onclick="criarMangaModal()">Cadastrar</button>
+              `;
 
-            <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;">
-              <button class="btn btnGhost" onclick="_mtCloseModal()">Cancelar</button>
-              <button class="btn btnPrimary" onclick="criarMangaModal()">Cadastrar</button>
-            </div>
-          `;
-
-            openModal("📚 Novo Mangá", html);
-            // popula select de editoras
+            openModal("📚 Novo Mangá", body, footer);
             carregarEditorasNoSelects();
             setTimeout(() => document.getElementById("mTituloModal")?.focus(), 0);
 
-            // toggle BR -> select
             setTimeout(() => {
                 const chk = document.getElementById("mBRModal");
                 chk?.addEventListener("change", async (e) => {
@@ -1015,18 +1037,11 @@
             const res = await apiFetch("/api/catalogo", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    titulo,
-                    lancadoNoBrasil: br,
-                    editoraId: br ? editoraId : null
-                })
+                body: JSON.stringify({ titulo, lancadoNoBrasil: br, editoraId: br ? editoraId : null })
             });
 
             const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                showWarn(data?.erro || "Erro ao cadastrar mangá.");
-                return;
-            }
+            if (!res.ok) { showWarn(data?.erro || "Erro ao cadastrar mangá."); return; }
 
             closeModal();
             await carregarCatalogo();
@@ -1036,45 +1051,41 @@
         function abrirEditarManga(id, titulo, lancadoNoBrasil, editoraId) {
             hideWarn();
 
-            const html = `
-            <div>
-              <label style="display:block;margin:10px 0 6px;color:var(--muted);font-weight:800;">Título</label>
-              <input id="mEditTitulo" value="${escapeHtml(titulo)}" />
-            </div>
+            const body = `
+                <div>
+                  <label style="display:block;margin:10px 0 6px;color:var(--muted);font-weight:800;">Título</label>
+                  <input id="mEditTitulo" value="${escapeHtml(titulo)}" />
+                </div>
 
-            <div style="margin-top:10px;">
-              <label class="chipCheck">
-                <input type="checkbox" id="mEditBR" ${lancadoNoBrasil ? "checked" : ""} />
-                Lançado no Brasil
-              </label>
-            </div>
+                <div style="margin-top:10px;">
+                  <label class="chipCheck">
+                    <input type="checkbox" id="mEditBR" ${lancadoNoBrasil ? "checked" : ""} />
+                    Lançado no Brasil
+                  </label>
+                </div>
 
-            <div id="mEditEditoraWrap" style="display:${lancadoNoBrasil ? "block" : "none"}; margin-top:10px;">
-              <label style="display:block;margin:10px 0 6px;color:var(--muted);font-weight:800;">Editora</label>
-              <select id="mEditEditoraId"></select>
-            </div>
+                <div id="mEditEditoraWrap" style="display:${lancadoNoBrasil ? "block" : "none"}; margin-top:10px;">
+                  <label style="display:block;margin:10px 0 6px;color:var(--muted);font-weight:800;">Editora</label>
+                  <select id="mEditEditoraId"></select>
+                </div>
+              `;
 
-            <div class="divider"></div>
+            const footer = `
+                <button class="btn btnGhost" onclick="_mtCloseModal()">Cancelar</button>
+                <button class="btn btnPrimary" onclick="salvarManga('${id}')">Salvar</button>
+              `;
 
-            <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;">
-              <button class="btn btnGhost" onclick="_mtCloseModal()">Cancelar</button>
-              <button class="btn btnPrimary" onclick="salvarManga('${id}')">Salvar</button>
-            </div>
-          `;
+            openModal("✏️ Editar Mangá", body, footer);
 
-            openModal("✏️ Editar Mangá", html);
-
-            // popula select
             const sel = document.getElementById("mEditEditoraId");
             if (sel) {
                 sel.innerHTML = `
-              <option value="">Selecione...</option>
-              ${editorasCache.map(e => `<option value="${e.id}">${escapeHtml(e.nome)}</option>`).join("")}
-            `;
+                      <option value="">Selecione...</option>
+                      ${editorasCache.map(e => `<option value="${e.id}">${escapeHtml(e.nome)}</option>`).join("")}
+                    `;
                 sel.value = editoraId || "";
             }
 
-            // toggle BR
             setTimeout(() => {
                 const chk = document.getElementById("mEditBR");
                 chk?.addEventListener("change", (e) => {
@@ -1100,18 +1111,11 @@
             const res = await apiFetch(`/api/catalogo/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    titulo,
-                    lancadoNoBrasil: br,
-                    editoraId: br ? editoraId : null
-                })
+                body: JSON.stringify({ titulo, lancadoNoBrasil: br, editoraId: br ? editoraId : null })
             });
 
             const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                showWarn(data?.erro || "Erro ao atualizar mangá.");
-                return;
-            }
+            if (!res.ok) { showWarn(data?.erro || "Erro ao atualizar mangá."); return; }
 
             closeModal();
             await carregarCatalogo();
@@ -1125,11 +1129,247 @@
 
             const res = await apiFetch(`/api/catalogo/${id}`, { method: "DELETE" });
             const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                showWarn(data?.erro || "Erro ao excluir mangá.");
+            if (!res.ok) { showWarn(data?.erro || "Erro ao excluir mangá."); return; }
+
+            await carregarCatalogo();
+            await carregarLogs();
+        }
+
+        // ===== ✅ DETALHES (modal com gêneros em lista) =====
+        function normalizeTag(x) { return String(x ?? "").trim(); }
+
+        function getGeneroListFromUI() {
+            const holder = document.getElementById("genHolder");
+            const items = holder ? Array.from(holder.querySelectorAll("[data-tag]")).map(el => el.getAttribute("data-tag")) : [];
+            const uniq = [];
+            const seen = new Set();
+            for (const t of items) {
+                const v = normalizeTag(t);
+                if (!v) continue;
+                const key = v.toLowerCase();
+                if (seen.has(key)) continue;
+                seen.add(key);
+                uniq.push(v);
+            }
+            return uniq;
+        }
+
+        function renderGeneroChips(generos) {
+            const holder = document.getElementById("genHolder");
+            if (!holder) return;
+            holder.innerHTML = (generos || []).map(g => `
+                <span class="chip" data-tag="${escapeHtml(g)}">
+                  ${escapeHtml(g)}
+                  <button type="button" onclick="removerGeneroChip('${escapeHtml(g)}')">✕</button>
+                </span>
+              `).join("");
+        }
+
+        window.removerGeneroChip = function (tag) {
+            const holder = document.getElementById("genHolder");
+            if (!holder) return;
+            const chips = Array.from(holder.querySelectorAll("[data-tag]"));
+            for (const c of chips) {
+                if ((c.getAttribute("data-tag") || "").toLowerCase() === String(tag).toLowerCase()) {
+                    c.remove();
+                    break;
+                }
+            }
+        }
+
+        window.adicionarGeneroChip = function () {
+            const inp = document.getElementById("genInput");
+            if (!inp) return;
+
+            const v = normalizeTag(inp.value);
+            if (!v) return;
+
+            const current = getGeneroListFromUI();
+
+            // ✅ limite 4
+            if (current.length >= 4) {
+                showWarn("Máximo de 4 gêneros por obra.");
+                inp.value = "";
+                inp.focus();
                 return;
             }
 
+            // dup check
+            if (current.some(x => x.toLowerCase() === v.toLowerCase())) {
+                inp.value = "";
+                inp.focus();
+                return;
+            }
+
+            current.push(v);
+            renderGeneroChips(current);
+            inp.value = "";
+            inp.focus();
+        };
+
+        // ✅ PREVIEW DA CAPA
+        function setCapaPreview(url) {
+            const img = document.getElementById("capaPreview");
+            const box = document.getElementById("capaPreviewBox");
+            const msg = document.getElementById("capaPreviewMsg");
+
+            if (!img || !box || !msg) return;
+
+            const u = (url || "").trim();
+
+            if (!u) {
+                box.style.display = "none";
+                img.src = "";
+                msg.textContent = "";
+                return;
+            }
+
+            box.style.display = "block";
+            msg.textContent = "Carregando capa...";
+            img.style.display = "block";
+
+            img.onload = () => { msg.textContent = ""; };
+            img.onerror = () => {
+                img.style.display = "none";
+                msg.textContent = "Não foi possível carregar a imagem. Tente um link direto (.jpg/.png) de outro site.";
+            };
+
+            img.src = u;
+        }
+
+        async function abrirDetalhesManga(id) {
+            hideWarn();
+
+            const res = await apiFetch(`/api/catalogo/${id}`);
+            const m = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                showWarn(m?.erro || "Erro ao carregar detalhes do mangá.");
+                return;
+            }
+
+            const generos = Array.isArray(m.generos) ? m.generos : [];
+
+            const body = `
+                <div class="fieldGrid">
+                  <div>
+                    <label style="display:block;margin:10px 0 6px;color:var(--muted);font-weight:800;">CapaUrl (http/https)</label>
+                    <input id="dCapaUrl" placeholder="https://..." value="${escapeHtml(m.capaUrl ?? "")}" />
+
+                    <div id="capaPreviewBox" style="display:none; margin-top:10px; padding:10px; border-radius:14px; border:1px solid rgba(36,39,53,.85); background: rgba(11,13,19,.45);">
+                      <div id="capaPreviewMsg" style="color:var(--muted); font-size:.92rem; margin-bottom:8px;"></div>
+                      <img id="capaPreview" alt="Preview da capa" style="max-width:160px; width:100%; height:auto; border-radius:14px; border:1px solid rgba(255,255,255,.06);" />
+                    </div>
+                  </div>
+                  <div>
+                    <label style="display:block;margin:10px 0 6px;color:var(--muted);font-weight:800;">Autor</label>
+                    <input id="dAutor" placeholder="Ex: Eiichiro Oda" value="${escapeHtml(m.autor ?? "")}" />
+                  </div>
+                </div>
+
+                <div class="fieldGrid" style="margin-top:10px;">
+                  <div>
+                    <label style="display:block;margin:10px 0 6px;color:var(--muted);font-weight:800;">Demografia</label>
+                    <select id="dDemografia">
+                      <option value="">(não informado)</option>
+                      <option value="Shonen">Shonen</option>
+                      <option value="Seinen">Seinen</option>
+                      <option value="Shojo">Shojo</option>
+                      <option value="Josei">Josei</option>
+                      <option value="Kodomo">Kodomo</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="display:block;margin:10px 0 6px;color:var(--muted);font-weight:800;">Gêneros (múltiplos)</label>
+                    <div style="display:flex;gap:10px;align-items:center;">
+                      <input id="genInput" placeholder="Digite e Enter (ex: Ação)" />
+                      <button class="btn" type="button" onclick="adicionarGeneroChip()">Adicionar</button>
+                    </div>
+                    <div class="chipsWrap" id="genHolder"></div>
+                    <div style="color:var(--muted);font-size:.9rem;margin-top:8px;">Ex: Ação, Aventura, Drama, Mistério...</div>
+                  </div>
+                </div>
+
+                <div class="fieldGrid" style="margin-top:10px;">
+                  <div>
+                    <label style="display:block;margin:10px 0 6px;color:var(--muted);font-weight:800;">Ano Lançamento (Original)</label>
+                    <input id="dAnoOrig" type="number" placeholder="Ex: 1999" value="${m.anoLancamentoOriginal ?? ""}" />
+                  </div>
+                  <div>
+                    <label style="display:block;margin:10px 0 6px;color:var(--muted);font-weight:800;">Ano Lançamento (Brasil)</label>
+                    <input id="dAnoBR" type="number" placeholder="Ex: 2002" value="${m.anoLancamentoBrasil ?? ""}" />
+                  </div>
+                </div>
+
+                <div style="margin-top:10px;">
+                  <label style="display:block;margin:10px 0 6px;color:var(--muted);font-weight:800;">Descrição</label>
+                  <textarea id="dDescricao" placeholder="Resumo/descrição...">${escapeHtml(m.descricao ?? "")}</textarea>
+                </div>
+              `;
+
+            const footer = `
+                <button class="btn btnGhost" onclick="_mtCloseModal()">Cancelar</button>
+                <button class="btn btnPrimary" onclick="salvarDetalhesManga('${id}')">Salvar detalhes</button>
+              `;
+
+            openModal(`🧾 Detalhes – ${m.titulo ?? "Mangá"}`, body, footer);
+
+            setTimeout(() => {
+                const sel = document.getElementById("dDemografia");
+                if (sel) sel.value = (m.demografia ?? "");
+
+                renderGeneroChips(generos);
+
+                // ✅ Preview da capa (inicial + ao digitar)
+                const capaInput = document.getElementById("dCapaUrl");
+                setCapaPreview(capaInput?.value ?? "");
+                capaInput?.addEventListener("input", (e) => setCapaPreview(e.target.value));
+
+                const inp = document.getElementById("genInput");
+                inp?.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter") { e.preventDefault(); adicionarGeneroChip(); }
+                });
+            }, 0);
+        }
+
+        async function salvarDetalhesManga(id) {
+            hideWarn();
+
+            const capaUrl = (document.getElementById("dCapaUrl")?.value ?? "").trim();
+            const autor = (document.getElementById("dAutor")?.value ?? "").trim();
+            const demografia = (document.getElementById("dDemografia")?.value ?? "").trim();
+            const anoOrig = (document.getElementById("dAnoOrig")?.value ?? "").trim();
+            const anoBr = (document.getElementById("dAnoBR")?.value ?? "").trim();
+            const descricao = (document.getElementById("dDescricao")?.value ?? "").trim();
+
+            const generos = getGeneroListFromUI();
+            if (generos.length > 4) {
+                showWarn("Máximo de 4 gêneros por obra.");
+                return;
+            }
+
+            const payload = {
+                capaUrl: capaUrl || null,
+                descricao: descricao || null,
+                demografia: demografia || null,
+                autor: autor || null,
+                anoLancamentoOriginal: anoOrig ? Number(anoOrig) : null,
+                anoLancamentoBrasil: anoBr ? Number(anoBr) : null,
+                generos: generos
+            };
+
+            const res = await apiFetch(`/api/catalogo/${id}/detalhes`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                showWarn(data?.erro || "Erro ao salvar detalhes.");
+                return;
+            }
+
+            closeModal();
             await carregarCatalogo();
             await carregarLogs();
         }
@@ -1141,29 +1381,23 @@
 
             const res = await apiFetch("/api/adminlogs");
             const data = await res.json().catch(() => []);
-            if (!res.ok) {
-                list.innerHTML = `<div class="empty">Erro ao carregar logs.</div>`;
-                return;
-            }
+            if (!res.ok) { list.innerHTML = `<div class="empty">Erro ao carregar logs.</div>`; return; }
 
             const arr = Array.isArray(data) ? data : [];
-            if (arr.length === 0) {
-                list.innerHTML = `<div class="empty">Sem logs por enquanto.</div>`;
-                return;
-            }
+            if (arr.length === 0) { list.innerHTML = `<div class="empty">Sem logs por enquanto.</div>`; return; }
 
             list.innerHTML = arr.map(l => `
-            <div class="rowItem">
-              <div class="rowMain" style="min-width:0;">
-                <div class="rowTitle">${escapeHtml(l.acao)}</div>
-                <div class="rowMeta">
-                  ${l.detalhes ? `<span class="tag">${escapeHtml(l.detalhes)}</span>` : ``}
-                  <span class="tag">Admin: ${escapeHtml(l.admin ?? "—")}</span>
-                  <span class="tag">${escapeHtml(l.criadoEm)}</span>
+                <div class="rowItem">
+                  <div class="rowMain" style="min-width:0;">
+                    <div class="rowTitle">${escapeHtml(l.acao)}</div>
+                    <div class="rowMeta">
+                      ${l.detalhes ? `<span class="tag">${escapeHtml(l.detalhes)}</span>` : ``}
+                      <span class="tag">Admin: ${escapeHtml(l.admin ?? "—")}</span>
+                      <span class="tag">${escapeHtml(l.criadoEm)}</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          `).join("");
+              `).join("");
         }
 
         // ===== Eventos / Init =====
@@ -1171,17 +1405,14 @@
             const ok = await validarAdmin();
             if (!ok) return;
 
-            // Botões principais
             document.getElementById("btnOpenNewEditora").addEventListener("click", abrirNovaEditora);
             document.getElementById("btnOpenNewManga").addEventListener("click", abrirNovoManga);
             document.getElementById("btnRecarregarEditoras").addEventListener("click", carregarEditoras);
             document.getElementById("btnCarregarCatalogo").addEventListener("click", carregarCatalogo);
             document.getElementById("btnLogs").addEventListener("click", carregarLogs);
 
-            // Busca editoras (local)
             document.getElementById("edBusca").addEventListener("input", () => renderEditorasList(editorasCache));
 
-            // Paginação catálogo
             document.getElementById("catPageSize").addEventListener("change", async (e) => {
                 catPageSize = Number(e.target.value || 20);
                 catPage = 1;
@@ -1199,7 +1430,6 @@
                 await carregarCatalogo();
             });
 
-            // Filtros catálogo
             document.getElementById("catFiltroBR").addEventListener("change", async (e) => {
                 catBR = String(e.target.value || "");
                 catPage = 1;
@@ -1221,20 +1451,14 @@
             });
 
             document.getElementById("btnCatLimparFiltros").addEventListener("click", async () => {
-                catQ = "";
-                catBR = "";
-                catEditoraId = "";
-                catPage = 1;
-
+                catQ = ""; catBR = ""; catEditoraId = ""; catPage = 1;
                 document.getElementById("catBusca").value = "";
                 document.getElementById("catFiltroBR").value = "";
                 document.getElementById("catFiltroEditora").value = "";
-
                 await carregarCatalogo();
             });
 
-            // Primeira carga
-            await carregarEditoras();   // alimenta cache + selects
+            await carregarEditoras();
             await carregarCatalogo();
             await carregarLogs();
         });

@@ -45,7 +45,7 @@ var connectionString = builder.Configuration.GetConnectionString("Default");
 
 if (string.IsNullOrWhiteSpace(connectionString))
 {
-    throw new Exception("ConnectionStrings:Default não configurada. Verifique appsettings.json ou variáveis do Render.");
+    throw new Exception("ConnectionStrings:Default não configurada. Verifique appsettings.json.");
 }
 
 builder.Services.AddDbContext<MangaTrackerDbContext>(options =>
