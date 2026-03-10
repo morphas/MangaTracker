@@ -13,6 +13,8 @@ namespace MangaTracker.Api.Data
         public DbSet<Leitura> Leituras { get; set; }
         public DbSet<AdminLog> AdminLogs { get; set; }
 
+        public DbSet<RankingHome> RankingHomes { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Leitura>()
