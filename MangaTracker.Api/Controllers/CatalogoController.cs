@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using MangaTracker.Api.Services;
 using MangaTracker.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MangaTracker.Api.Controllers
 {
@@ -11,10 +14,12 @@ namespace MangaTracker.Api.Controllers
     public class CatalogoController : ControllerBase
     {
         private readonly IBibliotecaService _service;
+        private readonly IJikanImportService _jikanImport;
 
-        public CatalogoController(IBibliotecaService service)
+        public CatalogoController(IBibliotecaService service, IJikanImportService jikanImport)
         {
             _service = service;
+            _jikanImport = jikanImport;
         }
 
         public record CadastrarMangaDto(string Titulo, bool LancadoNoBrasil, Guid? EditoraId);
@@ -117,6 +122,7 @@ namespace MangaTracker.Api.Controllers
                 anoLancamentoOriginal = m.AnoLancamentoOriginal,
                 anoLancamentoBrasil = m.AnoLancamentoBrasil,
                 generos = m.Generos ?? new List<string>(),
+                malId = m.MalId,
                 criadoEm = m.CriadoEm
             });
 
@@ -152,6 +158,7 @@ namespace MangaTracker.Api.Controllers
                 anoLancamentoOriginal = manga.AnoLancamentoOriginal,
                 anoLancamentoBrasil = manga.AnoLancamentoBrasil,
                 generos = manga.Generos ?? new List<string>(),
+                malId = manga.MalId,
                 criadoEm = manga.CriadoEm
             });
         }
@@ -305,6 +312,28 @@ namespace MangaTracker.Api.Controllers
             {
                 return BadRequest(new { erro = ex.Message });
             }
+        }
+
+        /// <summary>Importa uma página de mangás do Jikan (MyAnimeList). Todos entram com LancadoNoBrasil = false.</summary>
+        // POST: api/catalogo/importar-jikan?page=1&limit=25 (admin)
+        [HttpPost("importar-jikan")]
+        public async Task<IActionResult> ImportarJikan(
+            [FromHeader(Name = "X-User-Id")] Guid? userId,
+            [FromQuery] int page = 1,
+            [FromQuery] int limit = 25,
+            CancellationToken ct = default)
+        {
+            if (!TrySetAdmin(userId, out var erro))
+                return erro!;
+
+            var result = await _jikanImport.ImportarPaginaAsync(page, limit, ct);
+            return Ok(new
+            {
+                importados = result.Importados,
+                ignorados = result.Ignorados,
+                erros = result.Erros,
+                mensagens = result.Mensagens
+            });
         }
     }
 }

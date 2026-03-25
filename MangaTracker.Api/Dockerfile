@@ -1,21 +1,21 @@
-# Etapa 1: Build
+# Build
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+COPY ["MangaTracker.Api.csproj", "."]
+RUN dotnet restore "MangaTracker.Api.csproj"
+
+COPY . .
+RUN dotnet build "MangaTracker.Api.csproj" -c Release -o /app/build
+
+# Publish
+FROM build AS publish
+RUN dotnet publish "MangaTracker.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# Runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
-
-# Copia tudo
-COPY . ./
-
-# Publica a aplicação
-RUN dotnet restore
-RUN dotnet publish -c Release -o out
-
-# Etapa 2: Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
-WORKDIR /app
-COPY --from=build /app/out ./
-
-# Porta padrão
-ENV ASPNETCORE_URLS=http://0.0.0.0:8080
 EXPOSE 8080
-
+EXPOSE 8081
+COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "MangaTracker.Api.dll"]

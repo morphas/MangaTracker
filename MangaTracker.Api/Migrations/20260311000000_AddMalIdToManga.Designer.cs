@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using MangaTracker.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MangaTracker.Api.Migrations
 {
     [DbContext(typeof(MangaTrackerDbContext))]
-    partial class MangaTrackerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260311000000_AddMalIdToManga")]
+    partial class AddMalIdToManga
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -153,6 +156,33 @@ namespace MangaTracker.Api.Migrations
                         .HasFilter("\"MalId\" IS NOT NULL");
 
                     b.ToTable("Catalogo");
+                });
+
+            modelBuilder.Entity("MangaTracker.Models.RankingHome", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("GeradoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("MangaId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Posicao")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Valor")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RankingHomes");
                 });
 
             modelBuilder.Entity("MangaTracker.Models.Usuario", b =>

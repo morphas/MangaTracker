@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using MangaTracker.Models;
@@ -269,6 +269,9 @@ namespace MangaTracker.Api.Services
             return _db.Catalogo.FirstOrDefault(m => (m.Titulo ?? "").ToLower() == t);
         }
 
+        public Manga? BuscarMangaPorMalId(int malId)
+            => _db.Catalogo.FirstOrDefault(m => m.MalId == malId);
+
         public bool MangaExisteNoCatalogo(string titulo)
             => BuscarMangaPorTitulo(titulo) != null;
 
@@ -310,6 +313,35 @@ namespace MangaTracker.Api.Services
 
             _db.SaveChanges();
 
+            return BuscarMangaPorId(manga.Id)!;
+        }
+
+        public Manga CadastrarNoCatalogoDeJikan(int malId, string titulo, string? capaUrl, string? descricao, string? demografia, string? autor, int? anoOriginal, int? totalCapitulos, List<string>? generos)
+        {
+            if (_db.Catalogo.Any(m => m.MalId == malId))
+                throw new InvalidOperationException($"Mangá com MalId {malId} já existe no catálogo.");
+
+            var t = (titulo ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(t)) t = $"MalId_{malId}";
+
+            var manga = new Manga
+            {
+                MalId = malId,
+                Titulo = t,
+                LancadoNoBrasil = false,
+                EditoraId = null,
+                CapaUrl = string.IsNullOrWhiteSpace(capaUrl) ? null : capaUrl.Trim(),
+                Descricao = string.IsNullOrWhiteSpace(descricao) ? null : descricao.Trim(),
+                Demografia = string.IsNullOrWhiteSpace(demografia) ? null : demografia.Trim(),
+                Autor = string.IsNullOrWhiteSpace(autor) ? null : autor.Trim(),
+                AnoLancamentoOriginal = anoOriginal,
+                TotalCapitulos = totalCapitulos ?? 0,
+                Generos = generos ?? new List<string>(),
+                CriadoEm = DateTime.UtcNow
+            };
+
+            _db.Catalogo.Add(manga);
+            _db.SaveChanges();
             return BuscarMangaPorId(manga.Id)!;
         }
 

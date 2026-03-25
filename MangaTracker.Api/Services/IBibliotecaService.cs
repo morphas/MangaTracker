@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using MangaTracker.Models;
 
@@ -30,9 +30,12 @@ namespace MangaTracker.Services
         PagedResult<Manga> ListarCatalogoPaginado(bool? lancadoNoBrasil, Guid? editoraId, string? q, int page, int pageSize);
         Manga? BuscarMangaPorId(Guid id);
         Manga? BuscarMangaPorTitulo(string titulo);
+        Manga? BuscarMangaPorMalId(int malId);
         bool MangaExisteNoCatalogo(string titulo);
 
         Manga CadastrarNoCatalogo(string titulo, bool lancadoNoBrasil, Guid? editoraId);
+        /// <summary>Cadastra mangá importado do Jikan (MyAnimeList). LancadoNoBrasil = false.</summary>
+        Manga CadastrarNoCatalogoDeJikan(int malId, string titulo, string? capaUrl, string? descricao, string? demografia, string? autor, int? anoOriginal, int? totalCapitulos, List<string>? generos);
         Manga AtualizarMangaDoCatalogo(Guid mangaId, string titulo, bool lancadoNoBrasil, Guid? editoraId);
 
         // ✅ Detalhes avançados (agora com generos como lista)

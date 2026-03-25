@@ -56,6 +56,7 @@ builder.Services.AddDbContext<MangaTrackerDbContext>(options =>
 // ==========================
 
 builder.Services.AddScoped<IBibliotecaService, BibliotecaServiceDb>();
+builder.Services.AddHttpClient<IJikanImportService, JikanImportService>();
 
 var app = builder.Build();
 

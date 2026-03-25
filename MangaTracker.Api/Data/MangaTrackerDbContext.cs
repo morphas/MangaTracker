@@ -1,4 +1,4 @@
-﻿using MangaTracker.Models;
+using MangaTracker.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace MangaTracker.Api.Data
@@ -23,6 +23,11 @@ namespace MangaTracker.Api.Data
             modelBuilder.Entity<Manga>()
                 .Property(m => m.Generos)
                 .HasColumnType("text[]");
+
+            modelBuilder.Entity<Manga>()
+                .HasIndex(m => m.MalId)
+                .IsUnique()
+                .HasFilter("\"MalId\" IS NOT NULL");
 
             base.OnModelCreating(modelBuilder);
         }

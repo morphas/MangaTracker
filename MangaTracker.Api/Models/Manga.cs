@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace MangaTracker.Models
@@ -28,6 +28,9 @@ namespace MangaTracker.Models
         public int? AnoLancamentoOriginal { get; set; }
 
         public int? AnoLancamentoBrasil { get; set; }
+
+        /// <summary>ID do MyAnimeList (Jikan) para evitar duplicatas na importação.</summary>
+        public int? MalId { get; set; }
 
         // ✅ NOVO CAMPO
         public List<string> Generos { get; set; } = new();
