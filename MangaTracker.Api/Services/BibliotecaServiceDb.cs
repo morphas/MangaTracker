@@ -21,7 +21,7 @@ namespace MangaTracker.Api.Services
         // =========================
         // BOOT
         // =========================
-        public void CarregarDados()
+        public void InicializarSistema()
         {
             // Cria admin inicial se não existir nenhum usuário.
             if (!_db.Usuarios.Any())
@@ -30,17 +30,14 @@ namespace MangaTracker.Api.Services
                 {
                     Nome = "admin",
                     Email = "admin@mangatracker.com",
-                    Senha = "admin",
+                    SenhaHash = "admin",
                     EhAdmin = true
                 });
                 _db.SaveChanges();
             }
         }
 
-        public void SalvarDados() { /* não usado no banco */ }
-
-        public string CaminhoDoArquivoDeDados() => "Postgres";
-
+        
         // =========================
         // USUÁRIOS
         // =========================
@@ -71,7 +68,7 @@ namespace MangaTracker.Api.Services
                 u.Nome.ToLower() == id ||
                 u.Email.ToLower() == id);
 
-            if (usuario == null || usuario.Senha != senha)
+            if (usuario == null || usuario.SenhaHash != senha)
                 throw new Exception("Usuário/E-mail ou senha incorretos.");
 
             _usuarioAtualId = usuario.Id;
@@ -102,7 +99,7 @@ namespace MangaTracker.Api.Services
             {
                 Nome = nome.Trim(),
                 Email = email.Trim(),
-                Senha = senha,
+                SenhaHash = senha,
                 EhAdmin = false
             });
 

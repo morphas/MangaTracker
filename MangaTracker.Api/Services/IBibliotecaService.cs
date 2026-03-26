@@ -7,10 +7,8 @@ namespace MangaTracker.Services
     public interface IBibliotecaService
     {
         // Boot
-        void CarregarDados();
-        void SalvarDados();
-        string CaminhoDoArquivoDeDados();
-
+        void InicializarSistema();
+       
         // Usuários
         Usuario? ObterUsuarioLogado();
         IReadOnlyList<Usuario> ListarUsuarios();

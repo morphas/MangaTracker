@@ -69,9 +69,9 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<MangaTrackerDbContext>();
     db.Database.Migrate();
 
-    // 🔥 CRIA ADMIN INICIAL SE NÃO EXISTIR
+    // Inicializa dados essenciais do sistema
     var service = scope.ServiceProvider.GetRequiredService<IBibliotecaService>();
-    service.CarregarDados();
+    service.InicializarSistema();
 }
 
 // ==========================
